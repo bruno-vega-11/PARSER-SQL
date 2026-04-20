@@ -3,8 +3,21 @@
 #include <fstream>
 #include "token.h"
 #include "scanner.h"
+#include <algorithm>
+#include <unordered_map>
 
 using namespace std;
+
+
+// -----------------------------
+// Keywords
+// -----------------------------
+unordered_map<string,Token::Type> keywords = {
+    {"select", Token::Type::SELECT},
+    {"from",Token::Type::FROM}
+};
+
+
 
 // -----------------------------
 // Constructor
@@ -49,10 +62,17 @@ Token* Scanner::nextToken() {
     }
     // ID
     else if (isalpha(c)) {
+        string lexaMin;
+        lexaMin += (char)tolower(input[current]);
         current++;
-        while (current < input.length() && isalnum(input[current]))
+        while (current < input.length() && isalnum(input[current])) {
+            lexaMin += (char)tolower(input[current]);
             current++;
-        string lexema = input.substr(first, current - first);
+        }
+        auto it = keywords.find(lexaMin);
+        if (it != keywords.end()) {
+            return new Token(it->second,input,first,current - first);
+        }
         return new Token(Token::ID, input, first, current - first);
     }
     // STRING    
@@ -77,7 +97,7 @@ Token* Scanner::nextToken() {
         return new Token(Token::STRING, input,first,valor-first);
     }
     // Operadores
-    else if (strchr("*()=>!,;", c)) {
+    else if (strchr("*()=><!,;", c)) {
         switch (c) {
             case '(': token = new Token(Token::LPAREN,c); break;
             case ')': token = new Token(Token::RPAREN,c); break;
