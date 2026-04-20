@@ -10,17 +10,22 @@ class Token {
 public:
     // Tipos de token
     enum Type {
-        PLUS,    // +
-        MINUS,   // -
-        MUL,     // *
-        DIV,     // /
-        POW,     // **
         LPAREN,  // (
         RPAREN,  // )
-        SQRT,    // sqrt
+        STRING,
+        STAR,      // * del sql
         NUM,     // Número
         ERR,     // Error
         ID,      // ID
+        PCOMA,   // Punto y coma
+        COMA,    // Coma
+        BOOL,    // Booleanos
+        EQUAL,   // =
+        LEQ,     // <=
+        LES,     // <
+        GEQ,     // >=
+        GER,     // >
+        NEG,     // !
         END      // Fin de entrada
     };
 

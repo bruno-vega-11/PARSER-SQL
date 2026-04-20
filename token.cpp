@@ -23,16 +23,21 @@ Token::Token(Type type, const string& source, int first, int last)
 // Para Token por referencia
 ostream& operator<<(ostream& outs, const Token& tok) {
     switch (tok.type) {
-        case Token::PLUS:   outs << "TOKEN(PLUS, \""   << tok.text << "\")"; break;
-        case Token::MINUS:  outs << "TOKEN(MINUS, \""  << tok.text << "\")"; break;
-        case Token::MUL:    outs << "TOKEN(MUL, \""    << tok.text << "\")"; break;
-        case Token::DIV:    outs << "TOKEN(DIV, \""    << tok.text << "\")"; break;
         case Token::LPAREN:    outs << "TOKEN(LPAREN, \""    << tok.text << "\")"; break;
         case Token::RPAREN:    outs << "TOKEN(RPAREN, \""    << tok.text << "\")"; break;
-        case Token::POW:    outs << "TOKEN(POW, \""    << tok.text << "\")"; break;
-        case Token::SQRT:    outs << "TOKEN(SQRT, \""    << tok.text << "\")"; break;
+        case Token::STRING:    outs << "TOKEN(STRING, \""    << tok.text << "\")"; break;
         case Token::ID:    outs << "TOKEN(ID, \""    << tok.text << "\")"; break;
+        case Token::COMA:   outs << "TOKEN(COMA, \"" << tok.text << "\""; break;
+        case Token::PCOMA:  outs << "TOKEN(PCOMA, \"" << tok.text << "\""; break;
+        case Token::STAR:     outs << "TOKEN(*,\"" << tok.text << "\""; break;
         case Token::NUM:    outs << "TOKEN(NUM, \""    << tok.text << "\")"; break;
+        case Token::BOOL:   outs << "TOKEN(BOOL, \"" << tok.text << "\")"; break;
+        case Token::EQUAL:   outs << "TOKEN(EQUAL, \"" << tok.text << "\")"; break;
+        case Token::LEQ:   outs << "TOKEN(<=, \"" << tok.text << "\")"; break;
+        case Token::LES:   outs << "TOKEN(<, \"" << tok.text << "\")"; break;
+        case Token::GEQ:   outs << "TOKEN(>=, \"" << tok.text << "\")"; break;
+        case Token::GER:   outs << "TOKEN(>, \"" << tok.text << "\")"; break;
+        case Token::NEG:   outs << "TOKEN(!, \"" << tok.text << "\")"; break;
         case Token::ERR:    outs << "TOKEN(ERR, \""    << tok.text << "\")"; break;
         case Token::END:    outs << "TOKEN(END)"; break;
     }
