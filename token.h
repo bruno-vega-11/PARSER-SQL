@@ -28,7 +28,17 @@ public:
         NEG,     // !
         AND,     // and
         OR,      // or
-        END      // Fin de entrada
+        END,      // Fin de entrada
+
+        // Keywords principales
+        SELECT, INSERT, INTO, VALUES, UPDATE, SET, DELETE,
+
+        // Keywords de estructura y origen
+        FROM, WHERE, AS, JOIN,
+
+        // Keywords organizacion y agregación
+        GROUP_BY, HAVING,ORDER_BY,ASC,DESC
+
     };
 
     // Atributos
