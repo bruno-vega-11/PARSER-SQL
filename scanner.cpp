@@ -53,15 +53,37 @@ Token* Scanner::nextToken() {
         while (current < input.length() && isalnum(input[current]))
             current++;
         string lexema = input.substr(first, current - first);
-        if (lexema=="sqrt") return new Token(Token::SQRT, input, first, current - first);
-        else return new Token(Token::ID, input, first, current - first);
+        return new Token(Token::ID, input, first, current - first);
+    }
+    // STRING    
+    else if (c == '"' || c == '\'') {
+        char quote = c;
+        current++; 
+
+        first = current;
+
+        while (current < input.length() && input[current] != quote) {
+            current++;
+        }
+
+        if (current >= input.length()) {
+            throw runtime_error("String no cerrado");
+        }
+
+        int valor = current;
+
+        current++; 
+
+        return new Token(Token::STRING, input,first,valor-first);
     }
     // Operadores
-    else if (strchr("*,(,)", c)) {
+    else if (strchr("*,()", c)) {
         switch (c) {
             case '(': token = new Token(Token::LPAREN,c); break;
             case ')': token = new Token(Token::RPAREN,c); break;
             case '*': token = new Token(Token::STAR,c); break;
+            case ',': token = new Token(Token::COMA,c); break;
+
             default: token = new Token(Token::ERR,c);
         }
         current++;
