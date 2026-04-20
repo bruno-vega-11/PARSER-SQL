@@ -32,7 +32,6 @@ unordered_map<string,Token::Type> keywords = {
 };
 
 
-
 // -----------------------------
 // Constructor
 // -----------------------------
@@ -56,8 +55,19 @@ Token* Scanner::nextToken() {
     Token* token;
 
     // Saltar espacios en blanco
-    while (current < input.length() && is_white_space(input[current])) 
-        current++;
+    bool buscando = true;
+    while (buscando && current < input.length()) {
+        if (is_white_space(input[current])) {
+            current++;
+        }
+        else if (input[current] == '/' && current + 1 < input.length() && input[current+1] == '/') {
+            while (current < input.length() && input[current] != '\n') {
+                current++;
+            }
+        } else {
+            buscando = false;
+        }
+    }
 
     // Fin de la entrada
     if (current >= input.length()) 
@@ -79,7 +89,7 @@ Token* Scanner::nextToken() {
         string lexaMin;
         lexaMin += (char)tolower(input[current]);
         current++;
-        while (current < input.length() && isalnum(input[current])) {
+        while (current < input.length() && (isalnum(input[current]) || input[current] == '_')) {
             lexaMin += (char)tolower(input[current]);
             current++;
         }
@@ -111,7 +121,7 @@ Token* Scanner::nextToken() {
         return new Token(Token::STRING, input,first,valor-first);
     }
     // Operadores
-    else if (strchr("*()=><!,;", c)) {
+    else if (strchr("*()=><!,;/", c)) {
         switch (c) {
             case '(': token = new Token(Token::LPAREN,c); break;
             case ')': token = new Token(Token::RPAREN,c); break;
