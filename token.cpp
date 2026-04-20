@@ -38,6 +38,8 @@ ostream& operator<<(ostream& outs, const Token& tok) {
         case Token::GEQ:   outs << "TOKEN(>=, \"" << tok.text << "\")"; break;
         case Token::GER:   outs << "TOKEN(>, \"" << tok.text << "\")"; break;
         case Token::NEG:   outs << "TOKEN(!, \"" << tok.text << "\")"; break;
+        case Token::AND:   outs << "TOKEN(AND, \"" << tok.text << "\")"; break;
+        case Token::OR:    outs << "TOKEN(OR,  \"" << tok.text << "\")" ; break;
         case Token::ERR:    outs << "TOKEN(ERR, \""    << tok.text << "\")"; break;
         case Token::END:    outs << "TOKEN(END)"; break;
     }
