@@ -13,7 +13,7 @@ public:
         LPAREN,  // (
         RPAREN,  // )
         STRING,
-        STAR,      // * del sql
+        STAR,    // * del sql
         NUM,     // Número
         ERR,     // Error
         ID,      // ID
@@ -26,6 +26,8 @@ public:
         GEQ,     // >=
         GER,     // >
         NEG,     // !
+        AND,     // and
+        OR,      // or
         END      // Fin de entrada
     };
 
