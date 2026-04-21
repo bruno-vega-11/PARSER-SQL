@@ -44,29 +44,23 @@ ostream& operator<<(ostream& outs, const Token& tok) {
         case Token::END:    outs << "TOKEN(END)"; break;
 
         // keywords principales
-        // SELECT, INSERT, INTO, VALUES, UPDATE, SET, DELETE,
+        // SELECT, INSERT, INTO, VALUES, DELETE,
         case Token::SELECT: outs << "TOKEN(SELECT, \"" << tok.text << "\")"; break;
         case Token::INSERT:   outs << "TOKEN(INSERT, \"" << tok.text << "\")"; break;
         case Token::INTO:   outs << "TOKEN(INTO, \"" << tok.text << "\")"; break;
         case Token::VALUES:   outs << "TOKEN(VALUE, \"" << tok.text << "\")"; break;
-        case Token::UPDATE:   outs << "TOKEN(UPDATE, \"" << tok.text << "\")"; break;
-        case Token::SET:   outs << "TOKEN(SET, \"" << tok.text << "\")"; break;
         case Token::DELETE:   outs << "TOKEN(DELETE, \"" << tok.text << "\")"; break;
 
         // keywords de estructura y origen
-        // FROM, WHERE, AS, JOIN,
+        // FROM, WHERE, AS, IN, BETWEEN, POINT_R, POINT_K
         case Token::FROM: outs << "TOKEN(FROM, \"" << tok.text << "\")"; break;
         case Token::WHERE:   outs << "TOKEN(WHERE, \"" << tok.text << "\")"; break;
         case Token::AS:   outs << "TOKEN(AS, \"" << tok.text << "\")"; break;
-        case Token::JOIN:   outs << "TOKEN(JOIN, \"" << tok.text << "\")"; break;
+        case Token::IN:   outs << "TOKEN(IN, \"" << tok.text << "\")"; break;
+        case Token::BETWEEN: outs << "TOKEN(BETWEEN, \"" << tok.text << "\")"; break;
+        case Token::POINT_R:   outs << "TOKEN(POINT_R, \"" << tok.text << "\")"; break;
+        case Token::POINT_K: outs << "TOKEN(POINT_K, \"" << tok.text << "\")"; break;
 
-        // Keywords organizacion y agregación
-        // GROUP_BY, HAVING,ORDER_BY,ASC,DESC
-        case Token::GROUP_BY: outs << "TOKEN(GROUP_BY, \"" << tok.text << "\")"; break;
-        case Token::HAVING:   outs << "TOKEN(HAVING, \"" << tok.text << "\")"; break;
-        case Token::ORDER_BY:   outs << "TOKEN(ORDER_BY, \"" << tok.text << "\")"; break;
-        case Token::ASC:   outs << "TOKEN(ASC, \"" << tok.text << "\")"; break;
-        case Token::DESC:   outs << "TOKEN(DESC, \"" << tok.text << "\")"; break;
 
     }
     return outs;

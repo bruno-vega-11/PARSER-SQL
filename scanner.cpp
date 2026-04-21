@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <unordered_map>
 
+#include "token.h"
+
 using namespace std;
 
 
@@ -17,18 +19,13 @@ unordered_map<string,Token::Type> keywords = {
     {"insert",Token::Type::INSERT},
     {"into",Token::Type::INTO},
     {"values",Token::Type::VALUES},
-    {"update",Token::Type::UPDATE},
-    {"set",Token::Type::SET},
     {"delete",Token::Type::DELETE},
     {"from",Token::Type::FROM},
     {"where",Token::Type::WHERE},
     {"as",Token::Type::AS},
-    {"join",Token::Type::JOIN},
-    {"group_by",Token::Type::GROUP_BY},
-    {"having",Token::Type::HAVING},
-    {"order_by",Token::Type::ORDER_BY},
-    {"asc",Token::Type::ASC},
-    {"desc",Token::Type::DESC}
+    {"in",Token::Type::IN},
+    {"between",Token::Type::BETWEEN},
+
 };
 
 

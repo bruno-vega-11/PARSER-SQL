@@ -31,13 +31,10 @@ public:
         END,      // Fin de entrada
 
         // Keywords principales
-        SELECT, INSERT, INTO, VALUES, UPDATE, SET, DELETE,
+        SELECT, INSERT, INTO, VALUES, DELETE,
 
-        // Keywords de estructura y origen
-        FROM, WHERE, AS, JOIN,
-
-        // Keywords organizacion y agregación
-        GROUP_BY, HAVING,ORDER_BY,ASC,DESC
+        // New Keywords
+        FROM, WHERE, AS, IN, BETWEEN, POINT_R, POINT_K
 
     };
 
