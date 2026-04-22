@@ -1,0 +1,45 @@
+Program :=
+<StmtList>
+
+StmtList :=
+<Stmt>{‘;’ <Stmt>}*
+
+Stmt :=
+<Select_stmt> | <Ins_stmt> | <Del_stmt> | <Create_indx> | <Create_table>
+
+/—--------------------------------------------------------------------------------------------------------------------------/
+Select_stmt:=
+‘SELECT’ ‘*’ ‘FROM’  id [‘WHERE’ <Condicion_w>]’ ’;’
+
+Condicion_w :=
+ id (<Comp_op> | <Entre> | <En>
+
+Comp_op :=
+ (‘==’ | ’>=’ | ‘<=’ | ‘>’ | ‘<’ ) (number | ‘(‘<Select_stmt>’)’)
+
+Entre :=
+‘BETWEEN’ number ‘AND’ number
+
+En := ‘IN’  ….
+
+/—--------------------------------------------------------------------------------------------------------------------------/
+
+Ins_stmt :=
+‘INSERT’ ‘INTO’ id ‘VALUES’ ‘(‘ (string|number){,(string|number)}* ‘)’ ‘;’
+
+/—--------------------------------------------------------------------------------------------------------------------------/
+
+Del_stmt :=
+‘DELETE’ ‘FROM’ id ‘WHERE’ <Condicion_w>
+
+/—--------------------------------------------------------------------------------------------------------------------------/
+Create_index:=
+‘CREATE’ ‘INDEX’ (‘EHASH’ | ‘BTREE’ | ‘RTREE’) id ‘ON’ id
+
+Create_ table:=
+‘CREATE’ ‘TABLE’ id ‘FROM’ ‘(‘ <string> ‘)’
+/—--------------------------------------------------------------------------------------------------------------------------/
+
+id := any alfa numeric thing
+string :=  similar to id  but starts with “”
+number := any number

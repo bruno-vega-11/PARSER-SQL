@@ -31,10 +31,13 @@ public:
         END,      // Fin de entrada
 
         // Keywords principales
-        SELECT, INSERT, INTO, VALUES, DELETE,
+        SELECT, INSERT, INTO, VALUES, DELETE, TABLE, CREATE,
 
         // New Keywords
-        FROM, WHERE, AS, IN, BETWEEN, POINT_R, POINT_K
+        FROM, WHERE, IN, ON, BETWEEN, POINT_R, POINT_K,
+
+        // Indices
+        INDEX, EHASH, BTREE, RTREE
 
     };
 
