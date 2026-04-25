@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <unordered_map>
 
+#include "token.h"
+
 
 using namespace std;
 
@@ -29,7 +31,8 @@ unordered_map<string,Token::Type> keywords = {
     {"index",  Token::Type::INDEX },
     {"ehash",Token::Type::EHASH},
     {"btree",Token::Type::BTREE},
-    {"rtree",Token::Type::RTREE}
+    {"rtree",Token::Type::RTREE},
+    {"and",Token::Type::AND}
 };
 
 

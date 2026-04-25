@@ -8,24 +8,33 @@ Stmt :=
 <Select_stmt> | <Ins_stmt> | <Del_stmt> | <Create_indx> | <Create_table>
 
 /—--------------------------------------------------------------------------------------------------------------------------/
-Select_stmt:=
-‘SELECT’ ‘*’ ‘FROM’  id [‘WHERE’ <Condicion_w>]’ ’;’
+Select_stmt:=  <Select_body>
+
+Select_body:=
+‘SELECT’ ‘*’ ‘FROM’  id [‘WHERE’ <Condicion_w>]
 
 Condicion_w :=
- id (<Comp_op> | <Entre> | <En>
+ id (<Comp_op> | <Entre> | <En> )
 
 Comp_op :=
- (‘==’ | ’>=’ | ‘<=’ | ‘>’ | ‘<’ ) (number | ‘(‘<Select_stmt>’)’)
+ (‘=’ | ’>=’ | ‘<=’ | ‘>’ | ‘<’ ) (number | ‘(‘<Select_body>’)’)
 
 Entre :=
 ‘BETWEEN’ number ‘AND’ number
 
-En := ‘IN’  ….
+En := ‘IN’  falta punto :D
 
 /—--------------------------------------------------------------------------------------------------------------------------/
+done
 
 Ins_stmt :=
-‘INSERT’ ‘INTO’ id ‘VALUES’ ‘(‘ (string|number){,(string|number)}* ‘)’ ‘;’
+‘INSERT’ ‘INTO’ id ‘VALUES’ ‘(‘  <Value_list>  ‘)’
+
+Value_list :=
+<Literal> {','<Literal>}*
+
+Literal :=
+string | number
 
 /—--------------------------------------------------------------------------------------------------------------------------/
 

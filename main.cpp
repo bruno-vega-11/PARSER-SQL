@@ -41,7 +41,7 @@ int main(int argc, const char* argv[]) {
     Parser parser(&scanner2);
 
     // Parsear y generar AST
-    Exp* ast = nullptr;
+    Program* ast = nullptr;
     
     try {
         ast = parser.parseProgram();
@@ -50,6 +50,7 @@ int main(int argc, const char* argv[]) {
         ast = nullptr; 
     }
 
+    /*
     AstVisitor arbol;
     arbol.arbol(ast);
 
@@ -58,6 +59,6 @@ int main(int argc, const char* argv[]) {
     
     EVALVisitor interprete;
     interprete.interprete(ast);
-
+    */
     return 0;
 }
