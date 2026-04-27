@@ -2,7 +2,6 @@
 #define AST_H
 
 #include <string>
-#include <unordered_map>
 #include <list>
 #include <ostream>
 
@@ -19,7 +18,11 @@ enum BinaryOp {
     LES_OP, // <
     GEQ_OP, // >=
     GER_OP, // >
-    AND_OP
+    AND_OP,
+    // solo usado en creacion de indices
+    EHASH,
+    BTREE,
+    RTREE,
 };
 
 // Clase abstracta Exp
@@ -27,6 +30,7 @@ class Exp {
 public:
     //virtual int  accept(Visitor* visitor) = 0;
     virtual ~Exp() = 0;  // Destructor puro → clase abstracta
+    virtual void toDot(std::ostream& out, int& id) const = 0;  // Visualización en DOT
     static string binopToChar(BinaryOp op);  // Conversión operador → string
 };
 
@@ -39,7 +43,7 @@ public:
     //int accept(Visitor* visitor);
     BinaryExp(Exp* l, Exp* r, BinaryOp op);
     ~BinaryExp();
-
+    void toDot(std::ostream& out, int& id) const override;
 };
 
 // Expresión numérica
@@ -49,16 +53,9 @@ public:
     //int accept(Visitor* visitor);
     NumberExp(int v);
     ~NumberExp();
+    void toDot(std::ostream& out, int& id) const override;
 };
 
-// Raiz cuadrada
-class SqrtExp : public Exp {
-public:
-    Exp* value;
-    //int accept(Visitor* visitor);
-    SqrtExp(Exp* v);
-    ~SqrtExp();
-};
 
 // identificador
 class IdExp: public Exp {
@@ -67,16 +64,7 @@ public:
     //int accept(Visitor* visitor);
     IdExp(string v);
     ~IdExp();
-};
-
-//
-class UnaryExp: public Exp {
-public:
-    Exp* son;
-    Exp* id;
-    //int accept(Visitor *visitor);
-    UnaryExp(Exp* s, Exp* i);
-    ~UnaryExp();
+    void toDot(std::ostream& out, int& id) const override;
 };
 
 // Bewteen expresion
@@ -88,6 +76,7 @@ public:
     //int accept(Visitor *visitor);
     BetweenEXp(Exp* i,Exp* l, Exp* h);
     ~BetweenEXp();
+    void toDot(std::ostream& out, int& id) const override;
 };
 
 // Expresion string
@@ -97,6 +86,7 @@ public:
     //int accept(Visitor* visitor); // modificar urgente
     StringExp(string s);
     ~StringExp();
+    void toDot(std::ostream& out, int& id) const override;
 };
 
 // Clase que define al programa
@@ -107,6 +97,7 @@ public:
     //void accept(Visitor visitor);
     ~Program();
     Program();
+    void toDot(ostream& out, int& id) const;
 };
 
 
@@ -115,6 +106,7 @@ class Stmt {
 public:
     //virtual void accept(Visitor visitor) = 0;
     virtual ~Stmt() = 0;
+    virtual void toDot(std::ostream& out, int& id) const = 0;
 };
 
 class SelectStmt: public Stmt {
@@ -124,6 +116,8 @@ public:
     //void accept(Visitor visitor) override;
     SelectStmt(string table, Exp* where_cond = nullptr);
     ~SelectStmt();
+    void toDot(std::ostream& out, int& id) const override;
+
 };
 
 class InsertStmt: public Stmt {
@@ -133,6 +127,8 @@ public:
     //void accept(Visitor visitor) override;
     InsertStmt(string i,list<Exp*> v);
     ~InsertStmt();
+    void toDot(std::ostream& out, int& id) const override;
+
 };
 
 class DeleteStmt: public Stmt {
@@ -142,6 +138,29 @@ public:
     //void accept(Visitor visitor) override;
     DeleteStmt(string s,Exp* w);
     ~DeleteStmt();
+    void toDot(std::ostream& out, int& id) const override;
+
+};
+
+class CreateIndexStmt: public Stmt {
+public:
+    BinaryOp op;
+    string indexName;
+    string tableName;
+
+    CreateIndexStmt(BinaryOp o,string i,string t);
+    ~CreateIndexStmt();
+    void toDot(std::ostream& out, int& id) const override;
+
+};
+
+class CreateTableStmt: public Stmt {
+public:
+    string tabla;
+    string path;
+    CreateTableStmt(string t,string p);
+    ~CreateTableStmt();
+    void toDot(std::ostream& out, int& id) const override;
 };
 
 #endif // AST_H

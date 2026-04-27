@@ -42,14 +42,19 @@ int main(int argc, const char* argv[]) {
 
     // Parsear y generar AST
     Program* ast = nullptr;
-    
+    ofstream out("ast.dot");
+    out << "digraph AST {\n";
     try {
         ast = parser.parseProgram();
+        int id = 0;
+        ast->toDot(out,id);
     } catch (const std::exception& e) {
         cerr << "Error al parsear: " << e.what() << endl;
-        ast = nullptr; 
+        ast = nullptr;
+        out << "    empty [label=\"AST vacío\"];\n";
     }
-
+    out << "}\n";
+    out.close();
     /*
     AstVisitor arbol;
     arbol.arbol(ast);

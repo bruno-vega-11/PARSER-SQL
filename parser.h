@@ -32,8 +32,10 @@ public:
 
     Stmt* parseDeleteStatement();       // Regla gramatical
 
-    auto* parseCreateIndex();           // Regla gramatical
-    auto* parseCreateTable();           // Regla gramatical
+    Stmt* parseCreateStatement();
+    Stmt* parseCreateIndex();           // Regla gramatical
+
+    Stmt* parseCreateTable();           // Regla gramatical
 
 };
 

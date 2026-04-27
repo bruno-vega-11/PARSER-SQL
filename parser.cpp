@@ -95,8 +95,8 @@ Stmt *Parser::parseStatement() {
     }
     else if (check(Token::CREATE)) {
         match(Token::CREATE);
-        throw runtime_error("todavia");
-        // aca hay factorizacion isquierda
+        s = parseCreateStatement();
+        return s;
     } else if (check(Token::SELECT)) {
         match(Token::SELECT);
         s = parseSelectStatement();
@@ -167,7 +167,13 @@ Exp* Parser::parseCondicionO(Exp* l) {
     if (check(Token::NUM)) {
         match(Token::NUM);
         r = new NumberExp(stoi(previous->text));
-    } else {
+    } else if (check(Token::LPAREN)) {
+        match(Token::LPAREN);
+        match(Token::SELECT);
+        r = parseSelectBody();
+        match(Token::RPAREN);
+    }
+    else {
         throw runtime_error("Se esperaba un numero"); // no implementaod la subconsulta xd
     }
     return new BinaryExp(l,r,op);
@@ -236,4 +242,53 @@ Stmt *Parser::parseDeleteStatement() {
     return new DeleteStmt(table,condicionW);
 }
 
+Stmt *Parser::parseCreateStatement() {
+    Exp* e;
+    if (check(Token::INDEX)) {
+        match(Token::INDEX);
+        return parseCreateIndex();
+    } else if (check(Token::TABLE)) {
+        match(Token::TABLE);
+        return parseCreateTable();
+    } else {
+        throw runtime_error("Se esperaba un INDEX O TABLE despues del create");
+    }
+}
+
+Stmt *Parser::parseCreateIndex() {
+    BinaryOp op;
+    if (check(Token::EHASH)) {
+        match(Token::EHASH);
+        op = EHASH;
+    }
+    if (check(Token::BTREE)) {
+        match(Token::BTREE);
+        op = BTREE;
+    }
+    if (check(Token::RTREE)) {
+        match(Token::RTREE);
+        op = RTREE;
+    }
+    match(Token::ID);
+    string colum = previous->text;
+    match(Token::ON);
+    match(Token::ID);
+    string table = previous->text;
+
+    return new CreateIndexStmt(op,colum,table);
+}
+
+Stmt *Parser::parseCreateTable() {
+    match(Token::ID);
+    string table = previous->text;
+    match(Token::FROM);
+    match(Token::LPAREN);
+
+    match(Token::STRING);
+    string path = previous->text;
+
+    match(Token::RPAREN);
+
+    return new CreateTableStmt(table,path);
+}
 

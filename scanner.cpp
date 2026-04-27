@@ -131,8 +131,21 @@ Token* Scanner::nextToken() {
             case ')': token = new Token(Token::RPAREN,c); break;
             case '*': token = new Token(Token::STAR,c); break;
             case '=': token = new Token(Token::EQUAL, c); break;
-            case '>': token = new Token(Token::GER, c); break;
-            case '<': token = new Token(Token::LES, c); break;
+            case '>': {
+                if (input[current + 1] == '=') {
+                    current++;
+                    token = new Token(Token::GEQ,input,first,current - first); break;
+
+                }
+                token = new Token(Token::GER, c); break;
+            }
+            case '<': {
+                if (input[current + 1] == '=') {
+                    current++;
+                    token = new Token(Token::LEQ,input,first,(current+1) - first); break;
+                }
+                token = new Token(Token::LES,c);break;
+            }
             case '!': token = new Token(Token::NEG,c); break;
             case ';': token = new Token(Token::PCOMA,c); break;
             case ',': token = new Token(Token::COMA,c); break;

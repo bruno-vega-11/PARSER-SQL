@@ -5,7 +5,7 @@ StmtList :=
 <Stmt>{‘;’ <Stmt>}*
 
 Stmt :=
-<Select_stmt> | <Ins_stmt> | <Del_stmt> | <Create_indx> | <Create_table>
+<Select_stmt> | <Ins_stmt> | <Del_stmt> | <Create_stmt>
 
 /—--------------------------------------------------------------------------------------------------------------------------/
 Select_stmt:=  <Select_body>
@@ -42,11 +42,14 @@ Del_stmt :=
 ‘DELETE’ ‘FROM’ id ‘WHERE’ <Condicion_w>
 
 /—--------------------------------------------------------------------------------------------------------------------------/
+Create_stmt:=
+'CREATE' (  <Create_indx> | <Create_table> )
+
 Create_index:=
-‘CREATE’ ‘INDEX’ (‘EHASH’ | ‘BTREE’ | ‘RTREE’) id ‘ON’ id
+‘INDEX’ (‘EHASH’ | ‘BTREE’ | ‘RTREE’) id ‘ON’ id
 
 Create_ table:=
-‘CREATE’ ‘TABLE’ id ‘FROM’ ‘(‘ <string> ‘)’
+‘TABLE’ id ‘FROM’ ‘(‘ <string> ‘)’
 /—--------------------------------------------------------------------------------------------------------------------------/
 
 id := any alfa numeric thing
