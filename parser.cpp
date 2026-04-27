@@ -167,11 +167,6 @@ Exp* Parser::parseCondicionO(Exp* l) {
     if (check(Token::NUM)) {
         match(Token::NUM);
         r = new NumberExp(stoi(previous->text));
-    } else if (check(Token::LPAREN)) {
-        match(Token::LPAREN);
-        match(Token::SELECT);
-        r = parseSelectBody();
-        match(Token::RPAREN);
     }
     else {
         throw runtime_error("Se esperaba un numero"); // no implementaod la subconsulta xd
