@@ -75,8 +75,10 @@ Program* Parser::parseStatementList() {
     Program* p = new Program();
     p->stmtList.push_back(parseStatement());
     while (check(Token::PCOMA)) {
-        match(Token::COMA);
-        p->stmtList.push_back(parseStatement());
+        match(Token::PCOMA);
+        if (!isAtEnd()) {
+            p->stmtList.push_back(parseStatement());
+        }
     }
     return p;
 }
@@ -120,8 +122,9 @@ Stmt* Parser::parseSelectBody() {
     if (check(Token::WHERE)) {
         match(Token::WHERE);
         condicionW = parseCondicionW();
+        return new SelectStmt(table,condicionW);
     }
-    return new SelectStmt(table,condicionW);
+    return new SelectStmt(table);
 }
 
 Exp* Parser::parseCondicionW() {
