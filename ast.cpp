@@ -198,3 +198,24 @@ CreateTableStmt::~CreateTableStmt() {}
 void CreateTableStmt::toDot(std::ostream &out, int &id) const {
 
 }
+
+// -----------------------PointExp----------------------
+PointExp::PointExp(double _x, double _y):x(_x),y(_y) {}
+
+PointExp::~PointExp() {}
+
+void PointExp::toDot(std::ostream &out, int &id) const {}
+
+// -----------------------SpatialRadiusExp----------------------
+SpatialRaidusExp::SpatialRaidusExp(Exp *co, PointExp *ce, double ra):column(co),center(ce),radius(ra) {}
+
+SpatialRaidusExp::~SpatialRaidusExp() {delete column; delete center;}
+
+void SpatialRaidusExp::toDot(std::ostream &out, int &id) const {}
+
+// -----------------------SpatialKnnExp----------------------
+SpatialKnnExp::SpatialKnnExp(Exp *co, PointExp *ce, int _k):column(co),center(ce),k(_k) {}
+
+SpatialKnnExp::~SpatialKnnExp() {delete column; delete center;}
+
+void SpatialKnnExp::toDot(std::ostream &out, int &id) const {}

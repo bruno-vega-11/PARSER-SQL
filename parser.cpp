@@ -187,7 +187,35 @@ Exp *Parser::parseEntre(Exp* e) {
 }
 
 Exp *Parser::parseIn(Exp* e) {
-    throw runtime_error("todavia no impelementado xd");
+    // Exp* e = column
+    match(Token::LPAREN);
+    match(Token::POINT);
+    match(Token::LPAREN);
+    match(Token::NUM);
+    double x = stod(previous->text);
+    match(Token::COMA);
+    match(Token::NUM);
+    double y = stod(previous->text);
+    match(Token::RPAREN);
+
+    PointExp* center = new PointExp(x,y);
+
+    match(Token::COMA);
+    if (check(Token::RADIUS)) {
+        match(Token::RADIUS);
+        match(Token::NUM);
+        double r = stod(previous->text);
+        match(Token::RPAREN);
+        return new SpatialRaidusExp(e,center,r);
+    } else if (check(Token::K)) {
+        match(Token::K);
+        match(Token::NUM);
+        int k = stoi(previous->text);
+        match(Token::RPAREN);
+        return new SpatialKnnExp(e,center,k);
+    } else {
+        throw runtime_error("se esperaba otro token");
+    }
 }
 
 

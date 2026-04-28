@@ -34,7 +34,7 @@ public:
         SELECT, INSERT, INTO, VALUES, DELETE, TABLE, CREATE,
 
         // New Keywords
-        FROM, WHERE, IN, ON, BETWEEN, POINT_R, POINT_K,
+        FROM, WHERE, IN, ON, BETWEEN, POINT, RADIUS, K,
 
         // Indices
         INDEX, EHASH, BTREE, RTREE

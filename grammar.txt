@@ -22,10 +22,9 @@ Comp_op :=
 Entre :=
 ‘BETWEEN’ number ‘AND’ number
 
-En := ‘IN’  falta punto :D
+En := ‘IN’ '(' 'POINT' '(' <number> ',' <number> ')' ',' ('RADIUS' <number>| 'K' <number>) ')'
 
 /—--------------------------------------------------------------------------------------------------------------------------/
-done
 
 Ins_stmt :=
 ‘INSERT’ ‘INTO’ id ‘VALUES’ ‘(‘  <Value_list>  ‘)’
@@ -38,11 +37,11 @@ string | number
 
 /—--------------------------------------------------------------------------------------------------------------------------/
 
-Del_stmt :=
+Del_Stmt :=
 ‘DELETE’ ‘FROM’ id ‘WHERE’ <Condicion_w>
 
 /—--------------------------------------------------------------------------------------------------------------------------/
-Create_stmt:=
+Create_Stmt:=
 'CREATE' (  <Create_indx> | <Create_table> )
 
 Create_index:=

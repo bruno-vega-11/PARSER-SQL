@@ -15,27 +15,26 @@ private:
 public:
     Parser(Scanner* scanner);       
     Program* parseProgram();            // Punto de entrada: analiza un programa completo
-    Program* parseP();                  // Regla gramatical P
-    Program* parseStatementList();      // Regla gramatical
-    Stmt* parseStatement();             // Regla gramatical
+    Program* parseP();                  // Regla gramatical Program
+    Program* parseStatementList();      // Regla gramatical StmtList
+    Stmt* parseStatement();             // Regla gramatical Stmt
 
-    Stmt* parseSelectStatement();       // Regla gramatical
-    Stmt* parseSelectBody();            // Regla gramatical
-    Exp* parseCondicionW();             // Regla gramatical
-    Exp* parseCondicionO(Exp* e);       // Regla gramatical
-    Exp* parseEntre(Exp* e);            // Regla gramatical
-    Exp* parseIn(Exp* e);               // Regla gramatical
+    Stmt* parseSelectStatement();       // Regla gramatical Select_Stmt
+    Stmt* parseSelectBody();            // Regla gramatical Select_body
+    Exp* parseCondicionW();             // Regla gramatical Condicion_w
+    Exp* parseCondicionO(Exp* e);       // Regla gramatical Comp_op
+    Exp* parseEntre(Exp* e);            // Regla gramatical Entre
+    Exp* parseIn(Exp* e);               // Regla gramatical In
 
-    Stmt* parseInsertStatement();       // Regla gramatical
-    list<Exp*> parseValueList();        // Regla gramatical
-    Exp* parseLiteral();                // Regla gramatical
+    Stmt* parseInsertStatement();       // Regla gramatical Ins_Stmt
+    list<Exp*> parseValueList();        // Regla gramatical Value_list
+    Exp* parseLiteral();                // Regla gramatical Literal
 
-    Stmt* parseDeleteStatement();       // Regla gramatical
+    Stmt* parseDeleteStatement();       // Regla gramatical Del_Stmt
 
-    Stmt* parseCreateStatement();
-    Stmt* parseCreateIndex();           // Regla gramatical
-
-    Stmt* parseCreateTable();           // Regla gramatical
+    Stmt* parseCreateStatement();       // Regla gramatical Create_Stmt
+    Stmt* parseCreateIndex();           // Regla gramatical Create_index
+    Stmt* parseCreateTable();           // Regla gramatical Create_table
 
 };
 

@@ -7,6 +7,9 @@
 #include <unordered_map>
 
 #include "token.h"
+#include "token.h"
+#include "token.h"
+#include "token.h"
 
 
 using namespace std;
@@ -32,7 +35,10 @@ unordered_map<string,Token::Type> keywords = {
     {"ehash",Token::Type::EHASH},
     {"btree",Token::Type::BTREE},
     {"rtree",Token::Type::RTREE},
-    {"and",Token::Type::AND}
+    {"and",Token::Type::AND},
+    {"point",Token::Type::POINT},
+    {"radius",Token::Type::RADIUS},
+    {"k",Token::Type::K}
 };
 
 

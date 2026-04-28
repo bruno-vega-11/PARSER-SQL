@@ -23,54 +23,53 @@ Token::Token(Type type, const string& source, int first, int last)
 // Para Token por referencia
 ostream& operator<<(ostream& outs, const Token& tok) {
     switch (tok.type) {
-        case Token::LPAREN:    outs << "TOKEN(LPAREN, \""    << tok.text << "\")"; break;
-        case Token::RPAREN:    outs << "TOKEN(RPAREN, \""    << tok.text << "\")"; break;
-        case Token::STRING:    outs << "TOKEN(STRING, \""    << tok.text << "\")"; break;
-        case Token::ID:    outs << "TOKEN(ID, \""    << tok.text << "\")"; break;
-        case Token::COMA:   outs << "TOKEN(COMA, \"" << tok.text << "\")"; break;
-        case Token::PCOMA:  outs << "TOKEN(PCOMA, \"" << tok.text << "\")"; break;
-        case Token::STAR:     outs << "TOKEN(*,\"" << tok.text << "\")"; break;
-        case Token::NUM:    outs << "TOKEN(NUM, \""    << tok.text << "\")"; break;
-        case Token::BOOL:   outs << "TOKEN(BOOL, \"" << tok.text << "\")"; break;
+        case Token::LPAREN:  outs << "TOKEN(LPAREN, \""    << tok.text << "\")"; break;
+        case Token::RPAREN:  outs << "TOKEN(RPAREN, \""    << tok.text << "\")"; break;
+        case Token::STRING:  outs << "TOKEN(STRING, \""    << tok.text << "\")"; break;
+        case Token::ID:      outs << "TOKEN(ID, \""    << tok.text << "\")"; break;
+        case Token::COMA:    outs << "TOKEN(COMA, \"" << tok.text << "\")"; break;
+        case Token::PCOMA:   outs << "TOKEN(PCOMA, \"" << tok.text << "\")"; break;
+        case Token::STAR:    outs << "TOKEN(*,\"" << tok.text << "\")"; break;
+        case Token::NUM:     outs << "TOKEN(NUM, \""    << tok.text << "\")"; break;
+        case Token::BOOL:    outs << "TOKEN(BOOL, \"" << tok.text << "\")"; break;
         case Token::EQUAL:   outs << "TOKEN(EQUAL, \"" << tok.text << "\")"; break;
-        case Token::LEQ:   outs << "TOKEN(<=, \"" << tok.text << "\")"; break;
-        case Token::LES:   outs << "TOKEN(<, \"" << tok.text << "\")"; break;
-        case Token::GEQ:   outs << "TOKEN(>=, \"" << tok.text << "\")"; break;
-        case Token::GER:   outs << "TOKEN(>, \"" << tok.text << "\")"; break;
-        case Token::NEG:   outs << "TOKEN(!, \"" << tok.text << "\")"; break;
-        case Token::AND:   outs << "TOKEN(AND, \"" << tok.text << "\")"; break;
-        case Token::OR:    outs << "TOKEN(OR,  \"" << tok.text << "\")" ; break;
-        case Token::ERR:    outs << "TOKEN(ERR, \""    << tok.text << "\")"; break;
-        case Token::END:    outs << "TOKEN(END)"; break;
+        case Token::LEQ:     outs << "TOKEN(<=, \"" << tok.text << "\")"; break;
+        case Token::LES:     outs << "TOKEN(<, \"" << tok.text << "\")"; break;
+        case Token::GEQ:     outs << "TOKEN(>=, \"" << tok.text << "\")"; break;
+        case Token::GER:     outs << "TOKEN(>, \"" << tok.text << "\")"; break;
+        case Token::NEG:     outs << "TOKEN(!, \"" << tok.text << "\")"; break;
+        case Token::AND:     outs << "TOKEN(AND, \"" << tok.text << "\")"; break;
+        case Token::OR:      outs << "TOKEN(OR,  \"" << tok.text << "\")" ; break;
+        case Token::ERR:     outs << "TOKEN(ERR, \""    << tok.text << "\")"; break;
+        case Token::END:     outs << "TOKEN(END)"; break;
 
         // keywords principales
         // SELECT, INSERT, INTO, VALUES, DELETE, TABLE, CREATE
-        case Token::SELECT: outs << "TOKEN(SELECT, \"" << tok.text << "\")"; break;
-        case Token::INSERT:   outs << "TOKEN(INSERT, \"" << tok.text << "\")"; break;
-        case Token::INTO:   outs << "TOKEN(INTO, \"" << tok.text << "\")"; break;
-        case Token::VALUES:   outs << "TOKEN(VALUE, \"" << tok.text << "\")"; break;
-        case Token::DELETE:   outs << "TOKEN(DELETE, \"" << tok.text << "\")"; break;
-        case Token::TABLE:  outs << "TOKEN(TABLE, \"" << tok.text << "\")"; break;
-        case Token::CREATE: outs << "TOKEN(CREATE, \"" << tok.text << "\")"; break;
+        case Token::SELECT:  outs << "TOKEN(SELECT, \"" << tok.text << "\")"; break;
+        case Token::INSERT:  outs << "TOKEN(INSERT, \"" << tok.text << "\")"; break;
+        case Token::INTO:    outs << "TOKEN(INTO, \"" << tok.text << "\")"; break;
+        case Token::VALUES:  outs << "TOKEN(VALUE, \"" << tok.text << "\")"; break;
+        case Token::DELETE:  outs << "TOKEN(DELETE, \"" << tok.text << "\")"; break;
+        case Token::TABLE:   outs << "TOKEN(TABLE, \"" << tok.text << "\")"; break;
+        case Token::CREATE:  outs << "TOKEN(CREATE, \"" << tok.text << "\")"; break;
 
 
         // keywords de estructura y origen
         // FROM, WHERE, IN, BETWEEN, POINT_R, POINT_K
-        case Token::FROM: outs << "TOKEN(FROM, \"" << tok.text << "\")"; break;
+        case Token::FROM:    outs << "TOKEN(FROM, \"" << tok.text << "\")"; break;
         case Token::WHERE:   outs << "TOKEN(WHERE, \"" << tok.text << "\")"; break;
-        case Token::IN:   outs << "TOKEN(IN, \"" << tok.text << "\")"; break;
-        case Token::ON:   outs << "TOKEN(ON, \"" << tok.text << "\")"; break;
+        case Token::IN:      outs << "TOKEN(IN, \"" << tok.text << "\")"; break;
+        case Token::ON:      outs << "TOKEN(ON, \"" << tok.text << "\")"; break;
         case Token::BETWEEN: outs << "TOKEN(BETWEEN, \"" << tok.text << "\")"; break;
-        case Token::POINT_R:   outs << "TOKEN(POINT_R, \"" << tok.text << "\")"; break;
-        case Token::POINT_K: outs << "TOKEN(POINT_K, \"" << tok.text << "\")"; break;
+        case Token::POINT:   outs << "TOKEN(POINT_R, \"" << tok.text << "\")"; break;
+        case Token::RADIUS:  outs << "TOKEN(RADIUS, \"" << tok.text << "\")"; break;
+        case Token::K:       outs << "TOKEN(k, \"" << tok.text << "\")"; break;
 
         // INDICES
-        case Token::INDEX:  outs << "TOKEN(INDEX, \"" << tok.text << "\")"; break;
+        case Token::INDEX:   outs << "TOKEN(INDEX, \"" << tok.text << "\")"; break;
         case Token::EHASH:   outs << "TOKEN(EHASH, \"" << tok.text << "\")"; break;
-        case Token::BTREE: outs << "TOKEN(BTREE, \"" << tok.text << "\")"; break;
+        case Token::BTREE:   outs << "TOKEN(BTREE, \"" << tok.text << "\")"; break;
         case Token::RTREE:   outs << "TOKEN(RTREE, \"" << tok.text << "\")"; break;
-
-
     }
     return outs;
 }

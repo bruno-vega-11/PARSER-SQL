@@ -89,6 +89,37 @@ public:
     void toDot(std::ostream& out, int& id) const override;
 };
 
+// Expresion para el punto
+class PointExp: public Exp {
+public:
+    double x,y;
+    PointExp(double _x,double _y);
+    ~PointExp();
+    void toDot(std::ostream &out, int &id) const override;
+};
+
+// Expresion para busqueda por radio
+class SpatialRaidusExp: public  Exp {
+public:
+    Exp* column;       // id de la columna
+    PointExp* center;
+    double radius;
+    SpatialRaidusExp(Exp* co,PointExp* ce,double ra);
+    ~SpatialRaidusExp();
+    void toDot(std::ostream &out, int &id) const override;
+};
+
+// Expresion para busqueda k-nn
+class SpatialKnnExp: public Exp {
+public:
+    Exp* column;
+    PointExp* center;
+    int k;
+    SpatialKnnExp(Exp* co,PointExp* ce,int _k);
+    ~SpatialKnnExp();
+    void toDot(std::ostream &out, int &id) const override;
+};
+
 // Clase que define al programa
 
 class Program {
