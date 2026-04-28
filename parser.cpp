@@ -133,7 +133,7 @@ Exp* Parser::parseCondicionW() {
         string id = previous->text;
         Exp *e = new IdExp(id);
         if (check(Token::IN)) {
-            match(Token::ID);
+            match(Token::IN);
             return parseIn(e);
         } else if (check(Token::BETWEEN)) {
             match(Token::BETWEEN);
