@@ -31,6 +31,14 @@ void DiskManager::reset_stats() {
     read_count = 0; write_count = 0;
 }
 
+long DiskManager::get_page_count() {
+    file.clear();
+    file.seekg(0, std::ios::end);
+    long bytes = file.tellg();
+    file.clear();
+    return bytes / PAGE_SIZE;
+}
+
 template <typename KeyType>
 void DiskManager::read_page(long page_id, Page<KeyType>& page) {
     file.clear();
@@ -47,11 +55,35 @@ void DiskManager::write_page(long page_id, const Page<KeyType>& page) {
     write_count++;
 }
 
+
+
 // --- Implementación SequentialFile ---
 
 template <typename KeyType>
 SequentialFile<KeyType>::SequentialFile(const std::string& data_name, const std::string& aux_name, size_t k)
-    : data_file(data_name), aux_file(aux_name), aux_record_count(0), total_data_pages(0), total_aux_pages(0), K_LIMIT(k) {}
+    : data_file(data_name), aux_file(aux_name), aux_record_count(0), total_data_pages(0), total_aux_pages(0), K_LIMIT(k) {
+    total_data_pages = data_file.get_page_count();
+    total_aux_pages = aux_file.get_page_count();
+
+    //incializar head_ptr
+    if (total_data_pages > 0) {
+        head_ptr = RecordPointer(false, 0, 0); //registro 0
+    } else {
+        head_ptr = RecordPointer(); // vacia
+    }
+
+    // restaurar el conteo exacto de registros en aux
+    if (total_aux_pages > 0) {
+        Page<KeyType> last_aux;
+        // leemos solo la ultima pagina auxiliar para ver cuantos registros tiene
+        aux_file.read_page(total_aux_pages - 1, last_aux);
+
+        // el total es : paginas anteriores llenas + registros en la ultima pagina
+        aux_record_count = (total_aux_pages - 1) * get_blocking_factor<KeyType>() + last_aux.record_count;
+    } else {
+        aux_record_count = 0;
+    }
+}
 
 template <typename KeyType>
 void SequentialFile<KeyType>::fetch_page(const RecordPointer& ptr, Page<KeyType>& page) {
