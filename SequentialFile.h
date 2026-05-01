@@ -102,6 +102,7 @@ public:
     std::vector<Record<KeyType>> rangeSearch(KeyType begin_key, KeyType end_key);
     void rebuild();
     std::vector<Record<KeyType>> scanAll();
+    std::vector<Record<KeyType>> searchByText(const std::string& query);
 };
 
 #endif // SEQUENTIAL_FILE_H

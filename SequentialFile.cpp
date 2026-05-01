@@ -366,6 +366,25 @@ std::vector<Record<KeyType>> SequentialFile<KeyType>::scanAll() {
     return results;
 }
 
+template <typename KeyType>
+std::vector<Record<KeyType>> SequentialFile<KeyType>::searchByText(const std::string& query) {
+    std::vector<Record<KeyType>> resultados_filtrados;
+
+    std::vector<Record<KeyType>> toda_la_tabla = this->scanAll();
+
+    // Iteramos buscando coincidencias en el char data[64]
+    for (const auto& rec : toda_la_tabla) {
+        std::string datos_registro = rec.data;
+
+        // std::string::npos significa "no se encontro"
+        if (datos_registro.find(query) != std::string::npos) {
+            resultados_filtrados.push_back(rec);
+        }
+    }
+
+    return resultados_filtrados;
+}
+
 template class SequentialFile<int>;
 template void DiskManager::read_page<int>(long, Page<int>&);
 template void DiskManager::write_page<int>(long, const Page<int>&);
