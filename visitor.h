@@ -1,33 +1,35 @@
 #ifndef VISITOR_H
 #define VISITOR_H
 #include "ast.h"
-#include <list>
-
-class BinaryExp;
-class NumberExp;
-class SqrtExp;
+#include "../Sequential-File/SequentialFile.h"
 
 class Visitor {
 public:
-    virtual int visit(BinaryExp* exp) = 0;
-    virtual int visit(NumberExp* exp) = 0;
-    virtual int visit(SqrtExp* exp) = 0;
+    virtual void visit(SelectStmt* s) = 0;
+    virtual void visit(InsertStmt* s) = 0;
+    virtual void visit(CreateIndexStmt* s) = 0;
+    virtual void visit(DeleteStmt* s) = 0;
+    virtual void visit(CreateTableStmt* s) = 0;
 };
 
 class PrintVisitor : public Visitor {
 public:
-
-    int visit(BinaryExp* exp) override;
-    int visit(NumberExp* exp) override;
-    int visit(SqrtExp* exp) override;
     void imprimir(Exp* program);
 };
 
 class EVALVisitor : public Visitor {
 public:
-    int visit(BinaryExp* exp) override;
-    int visit(NumberExp* exp) override;
-    int visit(SqrtExp* exp) override;
+    void visit(SelectStmt* s) override {
+        SequentialFile<int> sf(s->table + ".dat", s->table + "_aux.dat", 4);
+
+        if (s->where_cond == nullptr) {
+            //auto records = sf.scan();
+            //for (auto& r : records) {
+            //    std::cout << r.key << " ... \n";
+            //}
+        }
+        // WHERE lo dejas para después
+    }
     void interprete(Exp* program);
 };
 
@@ -35,9 +37,6 @@ class AstVisitor : public Visitor {
 public:
     ostream out{nullptr};
     int id;
-    int visit(BinaryExp* exp) override;
-    int visit(NumberExp* exp) override;
-    int visit(SqrtExp* exp) override;
     void arbol(Exp* program);
 };
 

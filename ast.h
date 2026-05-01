@@ -9,7 +9,7 @@ class Stmt;
 
 using namespace std;
 
-//class Visitor;
+class Visitor;
 
 // Operadores binarios soportados
 enum BinaryOp {
@@ -135,7 +135,7 @@ public:
 // Clase que define los statements
 class Stmt {
 public:
-    //virtual void accept(Visitor visitor) = 0;
+    virtual void accept(Visitor* visitor) = 0;
     virtual ~Stmt() = 0;
     virtual void toDot(std::ostream& out, int& id) const = 0;
 };
@@ -144,7 +144,7 @@ class SelectStmt: public Stmt {
 public:
     string table;
     Exp* where_cond;
-    //void accept(Visitor visitor) override;
+    void accept(Visitor* visitor) override;
     SelectStmt(string table, Exp* where_cond = nullptr);
     ~SelectStmt();
     void toDot(std::ostream& out, int& id) const override;
@@ -155,7 +155,7 @@ class InsertStmt: public Stmt {
 public:
     string table_name;
     list<Exp*> values;
-    //void accept(Visitor visitor) override;
+    void accept(Visitor* visitor) override;
     InsertStmt(string i,list<Exp*> v);
     ~InsertStmt();
     void toDot(std::ostream& out, int& id) const override;
@@ -166,7 +166,7 @@ class DeleteStmt: public Stmt {
 public:
     string table;
     Exp* where_cond;
-    //void accept(Visitor visitor) override;
+    void accept(Visitor* visitor) override;
     DeleteStmt(string s,Exp* w);
     ~DeleteStmt();
     void toDot(std::ostream& out, int& id) const override;
@@ -178,7 +178,8 @@ public:
     BinaryOp op;
     string indexName;
     string tableName;
-
+    
+    void accept(Visitor* visitor) override;
     CreateIndexStmt(BinaryOp o,string i,string t);
     ~CreateIndexStmt();
     void toDot(std::ostream& out, int& id) const override;
@@ -189,6 +190,8 @@ class CreateTableStmt: public Stmt {
 public:
     string tabla;
     string path;
+
+    void accept(Visitor* visitor) override;
     CreateTableStmt(string t,string p);
     ~CreateTableStmt();
     void toDot(std::ostream& out, int& id) const override;
