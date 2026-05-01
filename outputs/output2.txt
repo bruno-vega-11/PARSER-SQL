@@ -1,0 +1,7 @@
+=== STDOUT ===
+Parseo exitoso
+Codigo:
+4 * 5
+Interprete:20
+
+=== STDERR ===

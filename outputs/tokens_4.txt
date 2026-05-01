@@ -1,0 +1,11 @@
+Scanner
+
+TOKEN(NUM, "2")
+TOKEN(MUL, "*")
+TOKEN(NUM, "3")
+TOKEN(PLUS, "+")
+TOKEN(NUM, "4")
+TOKEN(END)
+
+Scanner exitoso
+

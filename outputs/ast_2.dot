@@ -1,0 +1,7 @@
+digraph AST {
+  node0 [label="*"];
+  node1 [label="4"];
+  node0 -> node1;
+  node2 [label="5"];
+  node0 -> node2;
+}

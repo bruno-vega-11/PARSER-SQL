@@ -1,0 +1,23 @@
+Scanner
+
+TOKEN(LPAREN, "(")
+TOKEN(LPAREN, "(")
+TOKEN(LPAREN, "(")
+TOKEN(NUM, "7")
+TOKEN(MUL, "*")
+TOKEN(NUM, "8")
+TOKEN(RPAREN, ")")
+TOKEN(PLUS, "+")
+TOKEN(LPAREN, "(")
+TOKEN(NUM, "9")
+TOKEN(MUL, "*")
+TOKEN(NUM, "10")
+TOKEN(RPAREN, ")")
+TOKEN(RPAREN, ")")
+TOKEN(DIV, "/")
+TOKEN(NUM, "11")
+TOKEN(RPAREN, ")")
+TOKEN(END)
+
+Scanner exitoso
+
