@@ -73,6 +73,7 @@ public:
 
     template <typename KeyType>
     void write_page(long page_id, const Page<KeyType>& page);
+    long get_page_count();
 };
 
 // 5. Motor Sequential File
@@ -81,6 +82,7 @@ class SequentialFile {
 private:
     DiskManager data_file;
     DiskManager aux_file;
+
 
     size_t aux_record_count;
     size_t K_LIMIT;
