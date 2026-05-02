@@ -3,7 +3,7 @@ import subprocess
 import shutil
 
 # Archivos c++
-programa = ["main.cpp", "scanner.cpp", "token.cpp", "parser.cpp", "ast.cpp", "visitor.cpp"]
+programa = ["main.cpp", "scanner.cpp", "token.cpp", "parser.cpp", "ast.cpp", "visitor.cpp","SequentialFile.cpp"]
 
 # Compilar
 compile = ["g++"] + programa
@@ -21,13 +21,13 @@ input_dir = "inputs"
 output_dir = "outputs"
 os.makedirs(output_dir, exist_ok=True)
 
-for i in range(1, 11):
+for i in range(1, 2):
     filename = f"input{i}.txt"
     filepath = os.path.join(input_dir, filename)
 
     if os.path.isfile(filepath):
         print(f"Ejecutando {filename}")
-        run_cmd = ["./a.out", filepath]
+        run_cmd = ["a.exe", filepath]
         result = subprocess.run(run_cmd, capture_output=True, text=True)
 
         # Guardar stdout y stderr

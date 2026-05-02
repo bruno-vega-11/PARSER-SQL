@@ -1,7 +1,7 @@
 #ifndef VISITOR_H
 #define VISITOR_H
 #include "ast.h"
-#include "../Sequential-File/SequentialFile.h"
+#include "SequentialFile.h"
 
 class Visitor {
 public:
@@ -19,17 +19,20 @@ public:
 
 class EVALVisitor : public Visitor {
 public:
-    void visit(SelectStmt* s) override {
-        SequentialFile<int> sf(s->table + ".dat", s->table + "_aux.dat", 4);
+    void visit(SelectStmt* s) override;
+    void visit(InsertStmt* s) override {
+        std::cout << "no";
 
-        if (s->where_cond == nullptr) {
-            //auto records = sf.scan();
-            //for (auto& r : records) {
-            //    std::cout << r.key << " ... \n";
-            //}
-        }
-        // WHERE lo dejas para después
     }
+    void visit(CreateIndexStmt* s) override {
+        std::cout << "no";
+
+    }
+    void visit(DeleteStmt* s) override {
+        std::cout << "no";
+
+    }
+    void visit(CreateTableStmt* s) override;
     void interprete(Exp* program);
 };
 
