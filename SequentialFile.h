@@ -90,6 +90,9 @@ private:
     long total_aux_pages;
     RecordPointer head_ptr;
 
+    // nuevo para generar llaves automaticamente
+    KeyType auto_increment_counter;
+
     void fetch_page(const RecordPointer& ptr, Page<KeyType>& page);
     void save_page(const RecordPointer& ptr, const Page<KeyType>& page);
     RecordPointer find_predecessor_or_exact(KeyType search_key);
@@ -97,12 +100,16 @@ private:
 public:
     SequentialFile(const std::string& data_name, const std::string& aux_name, size_t k = 50);
     std::pair<Record<KeyType>, int> search(KeyType search_key);
-    void add(const Record<KeyType>& new_record);
     void remove(KeyType key);
     std::vector<Record<KeyType>> rangeSearch(KeyType begin_key, KeyType end_key);
     void rebuild();
     std::vector<Record<KeyType>> scanAll();
     std::vector<Record<KeyType>> searchByText(const std::string& query);
+    // recibe el registro completo y bloquea duplicados
+    void add(const Record<KeyType>& new_record);
+
+    // solo recibe los datos (payload) y genera el ID
+    void add(const std::string& payload);
 };
 
 #endif // SEQUENTIAL_FILE_H
