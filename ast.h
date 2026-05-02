@@ -19,7 +19,9 @@ enum BinaryOp {
     GEQ_OP, // >=
     GER_OP, // >
     AND_OP,
-    // solo usado en creacion de indices
+};
+
+enum IndexType {
     EHASH,
     BTREE,
     RTREE,
@@ -175,12 +177,12 @@ public:
 
 class CreateIndexStmt: public Stmt {
 public:
-    BinaryOp op;
+    IndexType op;
     string indexName;
     string tableName;
     
     void accept(Visitor* visitor) override;
-    CreateIndexStmt(BinaryOp o,string i,string t);
+    CreateIndexStmt(IndexType o,string i,string t);
     ~CreateIndexStmt();
     void toDot(std::ostream& out, int& id) const override;
 
@@ -190,9 +192,10 @@ class CreateTableStmt: public Stmt {
 public:
     string tabla;
     string path;
+    list<pair<string,string>> columns;
 
     void accept(Visitor* visitor) override;
-    CreateTableStmt(string t,string p);
+    CreateTableStmt(string t,string p, list<pair<string,string>> c);
     ~CreateTableStmt();
     void toDot(std::ostream& out, int& id) const override;
 };

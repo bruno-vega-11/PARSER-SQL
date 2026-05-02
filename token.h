@@ -12,7 +12,6 @@ public:
     enum Type {
         LPAREN,  // (
         RPAREN,  // )
-        STRING,
         STAR,    // * del sql
         NUM,     // Número
         ERR,     // Error
@@ -34,11 +33,20 @@ public:
         SELECT, INSERT, INTO, VALUES, DELETE, TABLE, CREATE,
 
         // New Keywords
-        FROM, WHERE, IN, ON, BETWEEN, POINT, RADIUS, K,
+        FROM, WHERE, IN, ON, BETWEEN, RADIUS, K,
 
         // Indices
-        INDEX, EHASH, BTREE, RTREE
+        INDEX, EHASH, BTREE, RTREE,
 
+        // Tipos de datos
+        STRING,
+        INT,
+        FLOAT,
+        POINT,
+        CHAR,
+
+        // Constrains
+        PRIMARY, KEY
     };
 
     // Atributos

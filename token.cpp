@@ -25,7 +25,6 @@ ostream& operator<<(ostream& outs, const Token& tok) {
     switch (tok.type) {
         case Token::LPAREN:  outs << "TOKEN(LPAREN, \""    << tok.text << "\")"; break;
         case Token::RPAREN:  outs << "TOKEN(RPAREN, \""    << tok.text << "\")"; break;
-        case Token::STRING:  outs << "TOKEN(STRING, \""    << tok.text << "\")"; break;
         case Token::ID:      outs << "TOKEN(ID, \""    << tok.text << "\")"; break;
         case Token::COMA:    outs << "TOKEN(COMA, \"" << tok.text << "\")"; break;
         case Token::PCOMA:   outs << "TOKEN(PCOMA, \"" << tok.text << "\")"; break;
@@ -43,7 +42,7 @@ ostream& operator<<(ostream& outs, const Token& tok) {
         case Token::ERR:     outs << "TOKEN(ERR, \""    << tok.text << "\")"; break;
         case Token::END:     outs << "TOKEN(END)"; break;
 
-        // keywords principales
+        // Keywords principales
         // SELECT, INSERT, INTO, VALUES, DELETE, TABLE, CREATE
         case Token::SELECT:  outs << "TOKEN(SELECT, \"" << tok.text << "\")"; break;
         case Token::INSERT:  outs << "TOKEN(INSERT, \"" << tok.text << "\")"; break;
@@ -53,23 +52,29 @@ ostream& operator<<(ostream& outs, const Token& tok) {
         case Token::TABLE:   outs << "TOKEN(TABLE, \"" << tok.text << "\")"; break;
         case Token::CREATE:  outs << "TOKEN(CREATE, \"" << tok.text << "\")"; break;
 
-
-        // keywords de estructura y origen
+        // Keywords de estructura y origen
         // FROM, WHERE, IN, BETWEEN, POINT_R, POINT_K
         case Token::FROM:    outs << "TOKEN(FROM, \"" << tok.text << "\")"; break;
         case Token::WHERE:   outs << "TOKEN(WHERE, \"" << tok.text << "\")"; break;
         case Token::IN:      outs << "TOKEN(IN, \"" << tok.text << "\")"; break;
         case Token::ON:      outs << "TOKEN(ON, \"" << tok.text << "\")"; break;
         case Token::BETWEEN: outs << "TOKEN(BETWEEN, \"" << tok.text << "\")"; break;
-        case Token::POINT:   outs << "TOKEN(POINT_R, \"" << tok.text << "\")"; break;
         case Token::RADIUS:  outs << "TOKEN(RADIUS, \"" << tok.text << "\")"; break;
         case Token::K:       outs << "TOKEN(k, \"" << tok.text << "\")"; break;
 
-        // INDICES
+        // Indices
         case Token::INDEX:   outs << "TOKEN(INDEX, \"" << tok.text << "\")"; break;
         case Token::EHASH:   outs << "TOKEN(EHASH, \"" << tok.text << "\")"; break;
         case Token::BTREE:   outs << "TOKEN(BTREE, \"" << tok.text << "\")"; break;
         case Token::RTREE:   outs << "TOKEN(RTREE, \"" << tok.text << "\")"; break;
+
+        // Tipo de datos
+        case Token::INT:     outs << "TOKEN(INT, \"" << tok.text << "\")"; break;
+        case Token::STRING:  outs << "TOKEN(STRING, \""    << tok.text << "\")"; break;
+        case Token::FLOAT:   outs << "TOKEN(FLOAT, \"" << tok.text << "\")"; break;
+        case Token::POINT:   outs << "TOKEN(POINT, \"" << tok.text << "\")"; break;
+        case Token::CHAR:   outs << "TOKEN(CHAR, \"" << tok.text << "\")"; break;
+
     }
     return outs;
 }

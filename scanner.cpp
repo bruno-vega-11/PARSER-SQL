@@ -10,6 +10,8 @@
 #include "token.h"
 #include "token.h"
 #include "token.h"
+#include "token.h"
+#include "token.h"
 
 
 using namespace std;
@@ -36,9 +38,14 @@ unordered_map<string,Token::Type> keywords = {
     {"btree",Token::Type::BTREE},
     {"rtree",Token::Type::RTREE},
     {"and",Token::Type::AND},
-    {"point",Token::Type::POINT},
     {"radius",Token::Type::RADIUS},
-    {"k",Token::Type::K}
+    {"k",Token::Type::K},
+    {"int",Token::Type::INT},
+    {"float",Token::Type::FLOAT},
+    {"string",Token::Type::STRING},
+    {"point",Token::Type::POINT},
+    {"char",Token::Type::CHAR}
+
 };
 
 

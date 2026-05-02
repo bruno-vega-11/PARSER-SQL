@@ -47,8 +47,21 @@ Create_Stmt:=
 Create_index:=
 ‘INDEX’ (‘EHASH’ | ‘BTREE’ | ‘RTREE’) id ‘ON’ id
 
-Create_ table:=
-‘TABLE’ id ‘FROM’ ‘(‘ <string> ‘)’
+Create_table:=
+‘TABLE’ id ‘FROM’ ‘(‘ <string> ‘)’ '(' <Column_list> ')'
+
+Column_list:=
+<Column_def> {',' <Column_def>}
+
+Column_def:=
+id <Type> [ <Constrains> ]
+
+Type:=
+'INT' | 'FLOAT' | 'STRING' | POINT
+
+Constrains:=
+'PRIMARY' 'KEY'
+
 /—--------------------------------------------------------------------------------------------------------------------------/
 
 id := any alfa numeric thing

@@ -183,7 +183,7 @@ void DeleteStmt::toDot(std::ostream &out, int &id) const {
 }
 
 // -----------------------CreateIndexStmt----------------------
-CreateIndexStmt::CreateIndexStmt(BinaryOp o,string a,string b):op(o),indexName(a),tableName(b) {}
+CreateIndexStmt::CreateIndexStmt(IndexType o,string a,string b):op(o),indexName(a),tableName(b) {}
 
 CreateIndexStmt::~CreateIndexStmt() {}
 
@@ -191,7 +191,8 @@ void CreateIndexStmt::toDot(std::ostream& out, int& id) const {
 
 };
 // -----------------------CreateTableStmt----------------------
-CreateTableStmt::CreateTableStmt(string t, string p):tabla(t),path(p) {}
+CreateTableStmt::CreateTableStmt(string t, string p, list<pair<string,string>> c)
+:tabla(t),path(p),columns(c) {}
 
 CreateTableStmt::~CreateTableStmt() {}
 

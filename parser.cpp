@@ -282,19 +282,19 @@ Stmt *Parser::parseCreateStatement() {
 }
 
 Stmt *Parser::parseCreateIndex() {
-    BinaryOp op;
+    IndexType op;
     if (check(Token::EHASH)) {
         match(Token::EHASH);
         op = EHASH;
     }
-    if (check(Token::BTREE)) {
+    else if (check(Token::BTREE)) {
         match(Token::BTREE);
         op = BTREE;
     }
-    if (check(Token::RTREE)) {
+    else if (check(Token::RTREE)) {
         match(Token::RTREE);
         op = RTREE;
-    }
+    } else throw runtime_error("Indice no reconocido");
     match(Token::ID);
     string colum = previous->text;
     match(Token::ON);
@@ -315,6 +315,58 @@ Stmt *Parser::parseCreateTable() {
 
     match(Token::RPAREN);
 
-    return new CreateTableStmt(table,path);
+    match(Token::LPAREN);
+    list<pair<string,string>> columns = parseColumn_list();
+    match(Token::RPAREN);
+
+    return new CreateTableStmt(table,path,columns);
 }
 
+list<pair<string,string>> Parser::parseColumn_list() {
+    list<pair<string,string>> lista;
+
+    lista.push_back(parseColumn_def());
+    while (check(Token::COMA)) {
+        match(Token::COMA);
+        lista.push_back(parseColumn_def());
+    }
+    return lista;
+}
+
+pair<string, string> Parser::parseColumn_def() {
+    match(Token::ID);
+    string name = previous->text;
+    string type = parseType();
+    string constrains = parseConstrains();
+
+    return {name ,type + constrains};
+}
+
+string Parser::parseType() {
+    if (check(Token::INT)) {
+        match(Token::INT);
+        return "INT";
+    }
+    if (check(Token::FLOAT)) {
+        match(Token::FLOAT);
+        return "FLOAT";
+    }
+    if (check(Token::STRING)) {
+        match(Token::STRING);
+        return "STRING";
+    }
+    if (check(Token::POINT)) {
+        match(Token::POINT);
+        return "POINT";
+    }
+    throw runtime_error("Tipo de dato no reconocido");
+}
+
+string Parser::parseConstrains() {
+    if (check(Token::PRIMARY)){
+        match(Token::PRIMARY);
+        match(Token::KEY);
+        return " PK";
+    }
+    return "";
+}

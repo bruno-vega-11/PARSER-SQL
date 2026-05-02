@@ -35,7 +35,12 @@ public:
     Stmt* parseCreateStatement();       // Regla gramatical Create_Stmt
     Stmt* parseCreateIndex();           // Regla gramatical Create_index
     Stmt* parseCreateTable();           // Regla gramatical Create_table
-
+    list<pair<string,string>>
+        parseColumn_list();             // Regla gramatical Column_list
+    pair<string,string>
+        parseColumn_def();              // Regla gramatical Column_def
+    string parseType();                  // Regla gramatical Type
+    string parseConstrains();            // Regla gramatical Constrains
 };
 
 #endif // PARSER_H      
