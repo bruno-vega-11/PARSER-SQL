@@ -1,6 +1,9 @@
 //
 // Created by ASUS
 #include "SequentialFile.h"
+#include <fstream>
+#include <sstream>
+#include <string>
 
 // --- Implementación RecordPointer ---
 RecordPointer::RecordPointer() : in_aux(false), page_id(-1), record_idx(-1) {}
@@ -82,6 +85,15 @@ SequentialFile<KeyType>::SequentialFile(const std::string& data_name, const std:
         aux_record_count = (total_aux_pages - 1) * get_blocking_factor<KeyType>() + last_aux.record_count;
     } else {
         aux_record_count = 0;
+    }
+
+    auto_increment_counter = 0;
+    if (total_data_pages > 0 || total_aux_pages > 0) {
+        std::vector<Record<KeyType>> todos = this->scanAll();
+        if (!todos.empty()) {
+            // como scan los trae ordenados el ultimo de la lista tiene el ID mas alto
+            auto_increment_counter = todos.back().key;
+        }
     }
 }
 
@@ -180,6 +192,16 @@ void SequentialFile<KeyType>::add(const Record<KeyType>& new_record) {
 
     RecordPointer pred_ptr = find_predecessor_or_exact(new_record.key);
 
+    //  Evitar Claves Duplicadas
+    if (!pred_ptr.is_null()) {
+        Page<KeyType> check_page;
+        fetch_page(pred_ptr, check_page);
+        if (check_page.records[pred_ptr.record_idx].key == new_record.key &&
+            !check_page.records[pred_ptr.record_idx].is_deleted) {
+            throw std::runtime_error("Error: La Primary Key ya existe. Duplicado rechazado.");
+        }
+    }
+
     Page<KeyType> aux_page;
     long target_aux_page = total_aux_pages > 0 ? total_aux_pages - 1 : 0;
 
@@ -223,9 +245,31 @@ void SequentialFile<KeyType>::add(const Record<KeyType>& new_record) {
 
     aux_record_count++;
 
+    // Actualizamos el contador global de auto-incremento si insertaron un ID mayor manualmente
+    if (new_record.key > auto_increment_counter) {
+        auto_increment_counter = new_record.key;
+    }
+
     if (aux_record_count >= K_LIMIT) {
         rebuild();
     }
+}
+
+//metodo 2
+template <typename KeyType>
+void SequentialFile<KeyType>::add(const std::string& payload) {
+    Record<KeyType> rec;
+
+    // Generamos la llave automatica (sumamos 1 al ultimo ID conocido)
+    auto_increment_counter++;
+    rec.key = auto_increment_counter;
+
+    // Metemos el payload
+    std::strncpy(rec.data, payload.c_str(), sizeof(rec.data) - 1);
+    rec.data[sizeof(rec.data) - 1] = '\0'; // cierre de string
+
+    // LLamamos al add normal
+    this->add(rec);
 }
 
 template <typename KeyType>
@@ -384,6 +428,7 @@ std::vector<Record<KeyType>> SequentialFile<KeyType>::searchByText(const std::st
 
     return resultados_filtrados;
 }
+
 
 template class SequentialFile<int>;
 template void DiskManager::read_page<int>(long, Page<int>&);
