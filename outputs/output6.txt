@@ -1,4 +1,5 @@
 === STDOUT ===
+Parseo exitoso
 
 === STDERR ===
-Error al parsear: Se esperaba otro token
+No se pudo abrir: ../hola.csv

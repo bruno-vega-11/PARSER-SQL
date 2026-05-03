@@ -361,12 +361,11 @@ string Parser::parseType() {
     if (check(Token::CHAR)) {
         match(Token::CHAR);
         string typeStr = "CHAR";
-
         if (check(Token::LPAREN)) {
             match(Token::LPAREN);
             match(Token::INT_LIT);
             string size = previous->text;
-            match(Token::LPAREN);
+            match(Token::RPAREN);
             typeStr = "(" + size +  ")";
         }
         return typeStr;
