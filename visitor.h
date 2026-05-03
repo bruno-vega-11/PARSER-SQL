@@ -2,7 +2,8 @@
 #define VISITOR_H
 #include "ast.h"
 #include "SequentialFile.h"
-#include "BTree.h"
+#include "BPTree.h"
+
 class Visitor {
 public:
     virtual void visit(SelectStmt* s) = 0;
