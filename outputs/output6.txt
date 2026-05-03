@@ -1,4 +1,4 @@
 === STDOUT ===
 
 === STDERR ===
-Error al parsear: Error lexico
+Error al parsear: Se esperaba otro token
