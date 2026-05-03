@@ -1,4 +1,3 @@
 digraph AST {
-  node0 [label="PROGRAM", shape=box3d, style=filled, fillcolor=lightgrey];
-  node0 -> node1;
+    empty [label="AST vacío"];
 }
