@@ -104,7 +104,7 @@ Stmt *Parser::parseStatement() {
         s = parseSelectStatement();
         return s;
     } else{
-        throw runtime_error("no token esperado");
+        throw runtime_error("No se esperaba el token");
     }
 }
 
@@ -167,22 +167,25 @@ Exp* Parser::parseCondicionO(Exp* l) {
     }
 
     Exp* r;
-    if (check(Token::NUM)) {
-        match(Token::NUM);
-        r = new NumberExp(stoi(previous->text));
+    if (check(Token::INT_LIT)) {
+        match(Token::INT_LIT);
+        r = new IntExp(stoi(previous->text));
+    } else if (check(Token::FLOAT_LIT)) {
+        match(Token::FLOAT_LIT);
+        r = new FloatExp(stof(previous->text));
     }
     else {
-        throw runtime_error("Se esperaba un numero"); // no implementaod la subconsulta xd
+        throw runtime_error("Se esperaba un numero"); // no se implementa subconsulta
     }
     return new BinaryExp(l,r,op);
 }
 
 Exp *Parser::parseEntre(Exp* e) {
-    match(Token::NUM);
-    Exp* low = new NumberExp(stoi(previous->text));
+    match(Token::INT_LIT);
+    Exp* low = new IntExp(stoi(previous->text));
     match(Token::AND);
-    match(Token::NUM);
-    Exp* high = new NumberExp(stoi(previous->text));
+    match(Token::INT_LIT);
+    Exp* high = new IntExp(stoi(previous->text));
     return new BetweenEXp(e,low,high);
 }
 
@@ -191,11 +194,11 @@ Exp *Parser::parseIn(Exp* e) {
     match(Token::LPAREN);
     match(Token::POINT);
     match(Token::LPAREN);
-    match(Token::NUM);
-    double x = stod(previous->text);
+    match(Token::FLOAT_LIT);
+    float x = stof(previous->text);
     match(Token::COMA);
-    match(Token::NUM);
-    double y = stod(previous->text);
+    match(Token::FLOAT_LIT);
+    float y = stof(previous->text);
     match(Token::RPAREN);
 
     PointExp* center = new PointExp(x,y);
@@ -203,13 +206,13 @@ Exp *Parser::parseIn(Exp* e) {
     match(Token::COMA);
     if (check(Token::RADIUS)) {
         match(Token::RADIUS);
-        match(Token::NUM);
-        double r = stod(previous->text);
+        match(Token::FLOAT_LIT);
+        float r = stof(previous->text);
         match(Token::RPAREN);
         return new SpatialRaidusExp(e,center,r);
     } else if (check(Token::K)) {
         match(Token::K);
-        match(Token::NUM);
+        match(Token::INT_LIT);
         int k = stoi(previous->text);
         match(Token::RPAREN);
         return new SpatialKnnExp(e,center,k);
@@ -246,14 +249,18 @@ list<Exp*> Parser::parseValueList() {
 }
 
 Exp *Parser::parseLiteral() {
-    if (check(Token::STRING)) {
-        match(Token::STRING);
+    if (check(Token::CHAR_LIT)) {
+        match(Token::CHAR_LIT);
         string val = previous->text;
         return new StringExp(val);
-    } else if (check(Token::NUM)) {
-        match(Token::NUM);
+    } else if (check(Token::INT_LIT)) {
+        match(Token::INT_LIT);
         int val = stoi(previous->text);
-        return new NumberExp(val);
+        return new IntExp(val);
+    } else if (check(Token::FLOAT_LIT)) {
+        match(Token::FLOAT_LIT);
+        float val = stof(previous->text);
+        return new FloatExp(val);
     } else {
         throw runtime_error("Se esperaba un string o un numero");
     }
@@ -310,7 +317,7 @@ Stmt *Parser::parseCreateTable() {
     match(Token::FROM);
     match(Token::LPAREN);
 
-    match(Token::STRING);
+    match(Token::CHAR_LIT);
     string path = previous->text;
 
     match(Token::RPAREN);
@@ -351,9 +358,9 @@ string Parser::parseType() {
         match(Token::FLOAT);
         return "FLOAT";
     }
-    if (check(Token::STRING)) {
-        match(Token::STRING);
-        return "STRING";
+    if (check(Token::CHAR)) {
+        match(Token::CHAR);
+        return "CHAR";
     }
     if (check(Token::POINT)) {
         match(Token::POINT);
@@ -366,10 +373,11 @@ string Parser::parseConstrains() {
     if (check(Token::PRIMARY)){
         match(Token::PRIMARY);
         match(Token::KEY);
+        if (check(Token::INCREMENTAL)) {
+            match(Token::INCREMENTAL);
+            return " PK INCREMENTAL";
+        }
         return " PK";
-    } else if (check(Token::INCREMENTAL)) {
-        match(Token::INCREMENTAL);
-        return " INCREMENTAL";
     }
     return "";
 }

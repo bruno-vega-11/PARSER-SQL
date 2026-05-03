@@ -13,7 +13,6 @@ public:
         LPAREN,  // (
         RPAREN,  // )
         STAR,    // * del sql
-        NUM,     // Número
         ERR,     // Error
         ID,      // ID
         PCOMA,   // Punto y coma
@@ -39,11 +38,16 @@ public:
         INDEX, EHASH, BTREE, RTREE,
 
         // Tipos de datos
-        STRING,
         INT,
         FLOAT,
         POINT,
         CHAR,
+
+        // Literales
+        INT_LIT,
+        FLOAT_LIT,
+        POINT_LIT,
+        CHAR_LIT,
 
         // Constrains
         PRIMARY, KEY, INCREMENTAL

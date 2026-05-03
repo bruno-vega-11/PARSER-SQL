@@ -43,17 +43,24 @@ void BinaryExp::toDot(std::ostream &out, int &id) const {
         out << "  node" << myId << " -> node" << rightId << ";\n";
     }
 }
-// ------------------ NumberExp ------------------
-NumberExp::NumberExp(int v) : value(v) {}
+// ------------------ IntExp ------------------
+IntExp::IntExp(int v):value(v) {}
 
-NumberExp::~NumberExp() {}
+IntExp::~IntExp() {}
 
-void NumberExp::toDot(std::ostream &out, int &id) const {
+void IntExp::toDot(std::ostream &out, int &id) const {
     out << "  node" << id << " [label=\"" << value << "\", shape=ellipse, color=blue];\n";
     id++;
 }
+// ------------------ FloatExp ------------------
+FloatExp::FloatExp(float v):value(v) {}
 
+FloatExp::~FloatExp() {}
 
+void FloatExp::toDot(std::ostream &out, int &id) const {
+    out << "  node" << id << " [label=\"" << value << "\", shape=ellipse, color=blue];\n";
+    id++;
+}
 // ------------------ IdExp ------------------
 IdExp::IdExp(string v):value(v) {}
 

@@ -12,6 +12,9 @@
 #include "token.h"
 #include "token.h"
 #include "token.h"
+#include "token.h"
+#include "token.h"
+#include "token.h"
 
 
 using namespace std;
@@ -42,10 +45,11 @@ unordered_map<string,Token::Type> keywords = {
     {"k",Token::Type::K},
     {"int",Token::Type::INT},
     {"float",Token::Type::FLOAT},
-    {"string",Token::Type::STRING},
     {"point",Token::Type::POINT},
-    {"char",Token::Type::CHAR}
-
+    {"char",Token::Type::CHAR},
+    {"primary",Token::Type::PRIMARY},
+    {"key",Token::Type::KEY},
+    {"incremental",Token::Type::INCREMENTAL}
 };
 
 
@@ -96,10 +100,25 @@ Token* Scanner::nextToken() {
 
     // Números
     if (isdigit(c)) {
+        bool esFloat = false ;
         current++;
-        while (current < input.length() && isdigit(input[current]))
+        while (current < input.length() && isdigit(input[current])) {
             current++;
-        token = new Token(Token::NUM, input, first, current - first);
+        }
+        if (current < input.length() && input[current] == '.') {
+            if (current + 1 < input.length() && isdigit(input[current+1])) {
+                esFloat = true;
+                current++;
+                while (current < input.length() && isdigit(input[current])) {
+                    current++;
+                }
+            }
+        }
+        if (esFloat) {
+            token = new Token(Token::FLOAT_LIT,input,first,current-first);
+        } else {
+            token = new Token(Token::INT_LIT, input, first, current - first);
+        }
     }
     // ID
     else if (isalpha(c)) {
@@ -135,7 +154,7 @@ Token* Scanner::nextToken() {
 
         current++; 
 
-        return new Token(Token::STRING, input,first,valor-first);
+        return new Token(Token::CHAR_LIT, input,first,valor-first);
     }
     // Operadores
     else if (strchr("*()=><!,;/", c)) {

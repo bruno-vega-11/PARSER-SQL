@@ -48,16 +48,25 @@ public:
     void toDot(std::ostream& out, int& id) const override;
 };
 
-// Expresión numérica
-class NumberExp : public Exp {
+// Expresión numérica entero
+class IntExp : public Exp {
 public:
     int value;
     //int accept(Visitor* visitor);
-    NumberExp(int v);
-    ~NumberExp();
+    IntExp(int v);
+    ~IntExp();
     void toDot(std::ostream& out, int& id) const override;
 };
 
+// Expresion numerica float
+class FloatExp: public Exp {
+public:
+    float value;
+    // int accept(Visitor* visitor);
+    FloatExp(float v);
+    ~FloatExp();
+    void toDot(std::ostream &out, int &id) const override;
+};
 
 // identificador
 class IdExp: public Exp {
@@ -137,7 +146,7 @@ public:
 // Clase que define los statements
 class Stmt {
 public:
-    virtual void accept(Visitor* visitor) = 0;
+    //virtual void accept(Visitor* visitor) = 0;
     virtual ~Stmt() = 0;
     virtual void toDot(std::ostream& out, int& id) const = 0;
 };
@@ -146,7 +155,7 @@ class SelectStmt: public Stmt {
 public:
     string table;
     Exp* where_cond;
-    void accept(Visitor* visitor) override;
+    //void accept(Visitor* visitor) override;
     SelectStmt(string table, Exp* where_cond = nullptr);
     ~SelectStmt();
     void toDot(std::ostream& out, int& id) const override;
@@ -157,7 +166,7 @@ class InsertStmt: public Stmt {
 public:
     string table_name;
     list<Exp*> values;
-    void accept(Visitor* visitor) override;
+    //void accept(Visitor* visitor) override;
     InsertStmt(string i,list<Exp*> v);
     ~InsertStmt();
     void toDot(std::ostream& out, int& id) const override;
@@ -168,7 +177,7 @@ class DeleteStmt: public Stmt {
 public:
     string table;
     Exp* where_cond;
-    void accept(Visitor* visitor) override;
+    //void accept(Visitor* visitor) override;
     DeleteStmt(string s,Exp* w);
     ~DeleteStmt();
     void toDot(std::ostream& out, int& id) const override;
@@ -181,7 +190,7 @@ public:
     string indexName;
     string tableName;
     
-    void accept(Visitor* visitor) override;
+    //void accept(Visitor* visitor) override;
     CreateIndexStmt(IndexType o,string i,string t);
     ~CreateIndexStmt();
     void toDot(std::ostream& out, int& id) const override;
@@ -194,7 +203,7 @@ public:
     string path;
     list<pair<string,string>> columns;
 
-    void accept(Visitor* visitor) override;
+    //void accept(Visitor* visitor) override;
     CreateTableStmt(string t,string p, list<pair<string,string>> c);
     ~CreateTableStmt();
     void toDot(std::ostream& out, int& id) const override;

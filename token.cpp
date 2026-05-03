@@ -29,7 +29,6 @@ ostream& operator<<(ostream& outs, const Token& tok) {
         case Token::COMA:    outs << "TOKEN(COMA, \"" << tok.text << "\")"; break;
         case Token::PCOMA:   outs << "TOKEN(PCOMA, \"" << tok.text << "\")"; break;
         case Token::STAR:    outs << "TOKEN(*,\"" << tok.text << "\")"; break;
-        case Token::NUM:     outs << "TOKEN(NUM, \""    << tok.text << "\")"; break;
         case Token::BOOL:    outs << "TOKEN(BOOL, \"" << tok.text << "\")"; break;
         case Token::EQUAL:   outs << "TOKEN(EQUAL, \"" << tok.text << "\")"; break;
         case Token::LEQ:     outs << "TOKEN(<=, \"" << tok.text << "\")"; break;
@@ -70,10 +69,20 @@ ostream& operator<<(ostream& outs, const Token& tok) {
 
         // Tipo de datos
         case Token::INT:     outs << "TOKEN(INT, \"" << tok.text << "\")"; break;
-        case Token::STRING:  outs << "TOKEN(STRING, \""    << tok.text << "\")"; break;
         case Token::FLOAT:   outs << "TOKEN(FLOAT, \"" << tok.text << "\")"; break;
         case Token::POINT:   outs << "TOKEN(POINT, \"" << tok.text << "\")"; break;
         case Token::CHAR:   outs << "TOKEN(CHAR, \"" << tok.text << "\")"; break;
+
+        // Literales
+        case Token::INT_LIT:     outs << "TOKEN(INT_LIT, \"" << tok.text << "\")"; break;
+        case Token::FLOAT_LIT:   outs << "TOKEN(FLOAT_LIT, \"" << tok.text << "\")"; break;
+        case Token::POINT_LIT:   outs << "TOKEN(POINT_LIT, \"" << tok.text << "\")"; break;
+        case Token::CHAR_LIT:   outs << "TOKEN(CHAR_LIT, \"" << tok.text << "\")"; break;
+
+        // Constrains
+        case Token::INCREMENTAL: outs << "TOKEN(INCREMENTAL, \"" << tok.text << "\")"; break;
+        case Token::PRIMARY: outs << "TOKEN(PRIMARY, \"" << tok.text << "\")"; break;
+        case Token::KEY:  outs << "TOKEN(KEY, \"" << tok.text << "\")"; break;
 
     }
     return outs;
