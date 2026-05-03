@@ -367,6 +367,9 @@ string Parser::parseConstrains() {
         match(Token::PRIMARY);
         match(Token::KEY);
         return " PK";
+    } else if (check(Token::INCREMENTAL)) {
+        match(Token::INCREMENTAL);
+        return " INCREMENTAL";
     }
     return "";
 }

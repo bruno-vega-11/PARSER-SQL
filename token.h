@@ -46,7 +46,7 @@ public:
         CHAR,
 
         // Constrains
-        PRIMARY, KEY
+        PRIMARY, KEY, INCREMENTAL
     };
 
     // Atributos
