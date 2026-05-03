@@ -20,10 +20,7 @@ public:
 class EVALVisitor : public Visitor {
 public:
     void visit(SelectStmt* s) override;
-    void visit(InsertStmt* s) override {
-        std::cout << "no";
-
-    }
+    void visit(InsertStmt* s) override;
     void visit(CreateIndexStmt* s) override {
         std::cout << "no";
 
@@ -42,5 +39,10 @@ public:
     int id;
     void arbol(Exp* program);
 };
+
+int getTypeSize(const string& tipo);
+void serializeField(char* buf, const string& val, const string& tipo);
+string deserializeField(const char* buf, const string& tipo);
+vector<pair<string,string>> leerSchema(const string& path);
 
 #endif // VISITOR_H

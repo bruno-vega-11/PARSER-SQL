@@ -40,19 +40,39 @@ void CreateTableStmt::accept(Visitor* visitor) {
 
 ///////////////////////////////////////////////////////////////////////////////////
 void EVALVisitor::visit(SelectStmt* s) {
-    SequentialFile<int> sf("archivos/"+s->table + ".dat", "archivos/"+s->table + "_aux.dat", 4);
+    auto cols = leerSchema("archivos/"+s->table+".schema");
+
+    vector<int> offsets;
+    int offset = 0;
+    for (auto& col : cols) {
+        offsets.push_back(offset);
+        offset += getTypeSize(col.second);
+    }
+
+    SequentialFile<int> sf("archivos/"+s->table+".dat","archivos/"+s->table+"_aux.dat", 50);
 
     if (s->where_cond == nullptr) {
         auto records = sf.scanAll();
-        cout << "Scan exitoso";
+
+        cout << "id\t";
+        for (auto& col : cols) cout << col.first << "\t";
+        cout << "\n";
+        cout << string(40, '-') << "\n";
+
         for (auto& r : records) {
-            std::cout << r.key << " ... \n";
+            cout << r.key << "\t";
+            for (int i = 0; i < cols.size(); i++) {
+                string val = deserializeField(r.data + offsets[i], cols[i].second);
+                cout << val << "\t";
+            }
+            cout << "\n";
         }
+        cout << "Total: " << records.size() << " registros\n";
+    } else {
+        // WHERE
     }
-    
 }
 void EVALVisitor::visit(CreateTableStmt* s) {
-
     std::ifstream csv(s->path);
     if (!csv.is_open()) {
         std::cerr << "No se pudo abrir: " << s->path << "\n";
@@ -128,7 +148,7 @@ void EVALVisitor::visit(CreateTableStmt* s) {
         //    data_str += cols[i];
         //}
 
-        //sf.add_auto(data_str);
+        //sf.add(data_str);
         count++;
     }
 
@@ -136,6 +156,109 @@ void EVALVisitor::visit(CreateTableStmt* s) {
     std::cout << "Tabla '" << s->tabla << "' creada con " << count << " registros\n";
 }
  
+void EVALVisitor::visit(InsertStmt* s) {
+    auto cols = leerSchema("archivos/"+s->table_name+".schema");
+
+    // Calcular tamaño total del data
+    int total = 0;
+    for (auto& col : cols) total += getTypeSize(col.second);
+
+    if (total > 64) {
+        cerr << "Error: schema supera 64 bytes\n";
+        return;
+    }
+
+    // Serializar valores al buffer
+    char buffer[64] = {0};
+    int offset = 0;
+    int i = 0;
+    for (Exp* e : s->values) {
+        string val = "";
+        if (StringExp* se = dynamic_cast<StringExp*>(e))
+            val = se->value;
+        else if (NumberExp* ne = dynamic_cast<NumberExp*>(e))
+            val = to_string(ne->value);
+
+        serializeField(buffer + offset, val, cols[i].second);
+        offset += getTypeSize(cols[i].second);
+        i++;
+    }
+
+    SequentialFile<int> sf("archivos/"+s->table_name+".dat",
+                           "archivos/"+s->table_name+"_aux.dat", 50);
+
+    // add con buffer directo
+    Record<int> rec;
+    rec.key = 0; // el sf lo autoincrementa
+    memcpy(rec.data, buffer, 64);
+    sf.add(rec); // usa el add(string payload)? no...
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////
+//Helpers
 
+int getTypeSize(const string& tipo) {
+    if (tipo == "int")    return 4;
+    if (tipo == "float")  return 4;
+    if (tipo == "double") return 8;
+    if (tipo.find("char[") != string::npos) {
+        // "char[10]" → substr desde pos 5 hasta ']'
+        size_t start = tipo.find('[') + 1;
+        size_t end   = tipo.find(']');
+        string num = tipo.substr(start, end - start);
+        cout << "DEBUG tipo='" << tipo << "' num='" << num << "'\n"; // ver qué llega
+        return stoi(num);
+    }
+    return 0;
+}
+
+void serializeField(char* buf, const string& val, const string& tipo) {
+    if (tipo == "int") {
+        int v = stoi(val);
+        memcpy(buf, &v, 4);
+    } else if (tipo == "float") {
+        float v = stof(val);
+        memcpy(buf, &v, 4);
+    } else if (tipo == "double") {
+        double v = stod(val);
+        memcpy(buf, &v, 8);
+    } else if (tipo.find("char[") != string::npos) {
+        int n = stoi(tipo.substr(5, tipo.size()-6));
+        memset(buf, 0, n);
+        strncpy(buf, val.c_str(), n-1);
+    }
+}
+
+string deserializeField(const char* buf, const string& tipo) {
+    if (tipo == "int") {
+        int v; memcpy(&v, buf, 4);
+        return to_string(v);
+    } else if (tipo == "float") {
+        float v; memcpy(&v, buf, 4);
+        return to_string(v);
+    } else if (tipo == "double") {
+        double v; memcpy(&v, buf, 8);
+        return to_string(v);
+    } else if (tipo.find("char[") != string::npos) {
+        int n = stoi(tipo.substr(5, tipo.size()-6));
+        return string(buf, strnlen(buf, n));
+    }
+    return "";
+}
+
+vector<pair<string,string>> leerSchema(const string& path) {
+    vector<pair<string,string>> cols;
+    ifstream f(path);
+    string line;
+    getline(f, line);
+    stringstream ss(line);
+    string token;
+    while (getline(ss, token, ',')) {
+        auto pos = token.find(':');
+        string nombre = token.substr(0, pos);
+        string tipo   = token.substr(pos+1);
+        cols.push_back({nombre, tipo});
+    }
+    return cols;
+}

@@ -49,8 +49,12 @@ template <typename KeyType>
 struct Page {
     size_t record_count = 0;
     Record<KeyType> records[get_blocking_factor<KeyType>()];
+    char padding[PAGE_SIZE - sizeof(size_t) - sizeof(Record<KeyType>) * get_blocking_factor<KeyType>()];
+    
+    Page() : record_count(0) {
+        memset(padding, 0, sizeof(padding));
+    }
 };
-
 // 4. Gestor de Disco
 class DiskManager {
 private:
