@@ -1,7 +1,5 @@
 === STDOUT ===
 Parseo exitoso
-DEBUG tipo='char[10]' num='10'
-DEBUG tipo='char[10]' num='10'
 id	nombre	apellido	edad	
 ----------------------------------------
 1	Nom1	Ape1	21	
@@ -24,6 +22,7 @@ id	nombre	apellido	edad
 18	Nom18	Ape18	38	
 19	Nom19	Ape19	39	
 20	Nom20	Ape20	40	
-Total: 20 registros
+21	Juan	Perez	25	
+Total: 21 registros
 
 === STDERR ===

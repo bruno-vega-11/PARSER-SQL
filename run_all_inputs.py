@@ -21,7 +21,7 @@ input_dir = "inputs"
 output_dir = "outputs"
 os.makedirs(output_dir, exist_ok=True)
 
-for i in range(1, 2):
+for i in range(1, 5):
     filename = f"input{i}.txt"
     filepath = os.path.join(input_dir, filename)
 
@@ -47,15 +47,6 @@ for i in range(1, 2):
             dest_tokens = os.path.join(output_dir, f"tokens_{i}.txt")
             shutil.move(tokens_file, dest_tokens)
 
-        # Mover y convertir AST si existe
-        if os.path.isfile(ast_file):
-            dest_ast = os.path.join(output_dir, f"ast_{i}.dot")
-            shutil.move(ast_file, dest_ast)
-
-            # Convertir a PNG
-            output_img = os.path.join(output_dir, f"ast_{i}.png")
-            dot_cmd = ["dot", "-Tpng", dest_ast, "-o", output_img]
-            subprocess.run(dot_cmd, capture_output=True, text=True)
 
     else:
         print(filename, "no encontrado en", input_dir)

@@ -1,5 +1,0 @@
-digraph AST {
-  node0 [label="PROGRAM", shape=box3d, style=filled, fillcolor=lightgrey];
-  node1 [label="SELECT *\nFROM: hola", shape=rect, style=filled, fillcolor=lightyellow];
-  node0 -> node1;
-}

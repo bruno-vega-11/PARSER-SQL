@@ -272,6 +272,16 @@ void SequentialFile<KeyType>::add(const std::string& payload) {
     this->add(rec);
 }
 
+//metodo 3
+template <typename KeyType>
+void SequentialFile<KeyType>::add(const char* buffer, size_t size) {
+    Record<KeyType> rec;
+    auto_increment_counter++;
+    rec.key = auto_increment_counter;
+    memset(rec.data, 0, sizeof(rec.data));
+    memcpy(rec.data, buffer, size);
+    this->add(rec);
+}
 template <typename KeyType>
 void SequentialFile<KeyType>::remove(KeyType key) {
     RecordPointer ptr = find_predecessor_or_exact(key);

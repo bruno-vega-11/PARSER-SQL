@@ -1,7 +1,8 @@
 === STDOUT ===
 Parseo exitoso
-Codigo:
-1 + 2 + 3
-Interprete:6
+id	nombre	apellido	edad	
+----------------------------------------
+5	Nom5	Ape5	25	
+21	Juan	Perez	25	
 
 === STDERR ===

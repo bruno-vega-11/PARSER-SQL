@@ -114,6 +114,9 @@ public:
 
     // solo recibe los datos (payload) y genera el ID
     void add(const std::string& payload);
+
+    // recibe los datos pero como char
+    void add(const char* buffer, size_t size);
 };
 
 #endif // SEQUENTIAL_FILE_H

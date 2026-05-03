@@ -69,7 +69,147 @@ void EVALVisitor::visit(SelectStmt* s) {
         }
         cout << "Total: " << records.size() << " registros\n";
     } else {
-        // WHERE
+        if (BinaryExp* b = dynamic_cast<BinaryExp*>(s->where_cond)) {
+            IdExp* campo = dynamic_cast<IdExp*>(b->left);
+            NumberExp* valor = dynamic_cast<NumberExp*>(b->right);
+
+            if (!campo || !valor) {
+                cerr << "WHERE mal hecho:'v\n"; return;
+            }
+
+            if (campo->value == "id") {
+                if (b->op == EQUAL_OP) {
+                    try {
+                        auto [rec, ios] = sf.search(valor->value);
+                        cout << rec.key << "\t";
+   
+                        int off = 0;
+                        for (int i = 0; i < cols.size(); i++) {
+                            cout << deserializeField(rec.data + off, cols[i].second) << "\t";
+                            off += getTypeSize(cols[i].second);
+                        }
+                        cout << "\n";
+                    } catch (...) {
+                        cout << "No habia\n";
+                    }
+                }
+            } else {
+                auto records = sf.scanAll();
+                
+                int col_offset = 0;
+                string col_tipo = "";
+                for (auto& col : cols) {
+                    if (col.first == campo->value) {
+                        col_tipo = col.second;
+                        break;
+                    }
+                    col_offset += getTypeSize(col.second);
+                }
+
+                if (col_tipo.empty()) {
+                    cerr << "Columna '" << campo->value << "' no existe\n";
+                    return;
+                }
+
+                cout << "id\t";
+                for (auto& col : cols) cout << col.first << "\t";
+                cout << "\n" << string(40,'-') << "\n";
+
+                for (auto& r : records) {
+                    string val_rec = deserializeField(r.data + col_offset, col_tipo);
+                    string val_cond = to_string(valor->value);
+
+                    bool cumple = false;
+                    if (col_tipo == "int") {
+                        int a = stoi(val_rec), b2 = stoi(val_cond);
+                        switch(b->op) {
+                            case EQUAL_OP: cumple = a == b2; break;
+                            case LEQ_OP:   cumple = a <= b2; break;
+                            case LES_OP:   cumple = a <  b2; break;
+                            case GEQ_OP:   cumple = a >= b2; break;
+                            case GER_OP:   cumple = a >  b2; break;
+                            default: break;
+                        }
+                    } else {
+                        cumple = (val_rec == val_cond);
+                    }
+
+                    if (cumple) {
+                        cout << r.key << "\t";
+                        int off = 0;
+                        for (auto& col : cols) {
+                            cout << deserializeField(r.data + off, col.second) << "\t";
+                            off += getTypeSize(col.second);
+                        }
+                        cout << "\n";
+                    }
+                }
+            }
+
+        } else if (BetweenEXp* be = dynamic_cast<BetweenEXp*>(s->where_cond)) {
+            IdExp* campo = dynamic_cast<IdExp*>(be->id);
+            int low  = dynamic_cast<NumberExp*>(be->low)->value;
+            int high = dynamic_cast<NumberExp*>(be->high)->value;
+
+            // imprimir header
+            cout << "id\t";
+            for (auto& col : cols) cout << col.first << "\t";
+            cout << "\n" << string(40,'-') << "\n";
+
+            if (campo->value == "id") {
+                auto records = sf.rangeSearch(low, high);
+                for (auto& r : records) {
+                    cout << r.key << "\t";
+                    int off = 0;
+                    for (auto& col : cols) {
+                        cout << deserializeField(r.data + off, col.second) << "\t";
+                        off += getTypeSize(col.second);
+                    }
+                    cout << "\n";
+                }
+            } else {
+                int col_offset = 0;
+                string col_tipo = "";
+                for (auto& col : cols) {
+                    if (col.first == campo->value) {
+                        col_tipo = col.second;
+                        break;
+                    }
+                    col_offset += getTypeSize(col.second);
+                }
+
+                if (col_tipo.empty()) {
+                    cerr << "Columna '" << campo->value << "' no existe\n";
+                    return;
+                }
+
+                auto records = sf.scanAll();
+                for (auto& r : records) {
+                    string val_rec = deserializeField(r.data + col_offset, col_tipo);
+
+                    bool cumple = false;
+                    if (col_tipo == "int") {
+                        int v = stoi(val_rec);
+                        cumple = (v >= low && v <= high);
+                    } else if (col_tipo == "float") {
+                        float v = stof(val_rec);
+                        cumple = (v >= low && v <= high);
+                    } else {
+                        cumple = (val_rec >= to_string(low) && val_rec <= to_string(high));
+                    }
+
+                    if (cumple) {
+                        cout << r.key << "\t";
+                        int off = 0;
+                        for (auto& col : cols) {
+                            cout << deserializeField(r.data + off, col.second) << "\t";
+                            off += getTypeSize(col.second);
+                        }
+                        cout << "\n";
+                    }
+                }
+            }
+        }
     }
 }
 void EVALVisitor::visit(CreateTableStmt* s) {
@@ -159,7 +299,7 @@ void EVALVisitor::visit(CreateTableStmt* s) {
 void EVALVisitor::visit(InsertStmt* s) {
     auto cols = leerSchema("archivos/"+s->table_name+".schema");
 
-    // Calcular tamaño total del data
+    // Calcular tamaño total
     int total = 0;
     for (auto& col : cols) total += getTypeSize(col.second);
 
@@ -184,16 +324,15 @@ void EVALVisitor::visit(InsertStmt* s) {
         i++;
     }
 
-    SequentialFile<int> sf("archivos/"+s->table_name+".dat",
-                           "archivos/"+s->table_name+"_aux.dat", 50);
+    SequentialFile<int> sf("archivos/"+s->table_name+".dat","archivos/"+s->table_name+"_aux.dat", 50);
 
-    // add con buffer directo
+    // Usar add con buffer binario directo
     Record<int> rec;
-    rec.key = 0; // el sf lo autoincrementa
-    memcpy(rec.data, buffer, 64);
-    sf.add(rec); // usa el add(string payload)? no...
-}
+    // autoincremento lo maneja el SF internamente
+    sf.add(buffer, total); // limpio, autoincrementa
+    cout << "Insertado en '" << s->table_name << "'\n";
 
+}
 
 ///////////////////////////////////////////////////////////////////////////////////
 //Helpers
@@ -203,11 +342,9 @@ int getTypeSize(const string& tipo) {
     if (tipo == "float")  return 4;
     if (tipo == "double") return 8;
     if (tipo.find("char[") != string::npos) {
-        // "char[10]" → substr desde pos 5 hasta ']'
         size_t start = tipo.find('[') + 1;
         size_t end   = tipo.find(']');
         string num = tipo.substr(start, end - start);
-        cout << "DEBUG tipo='" << tipo << "' num='" << num << "'\n"; // ver qué llega
         return stoi(num);
     }
     return 0;
