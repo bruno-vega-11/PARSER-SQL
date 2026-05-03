@@ -217,89 +217,76 @@ void EVALVisitor::visit(SelectStmt* s) {
 }
 
 void EVALVisitor::visit(CreateTableStmt* s) {
-    std::ifstream csv(s->path);
+    ofstream schema("archivos/"+s->tabla+".schema");
+    bool first = true;
+    for (auto& col : s->columns) {
+        if (!first) schema << ",";
+        schema << col.first << ":" << col.second;
+        first = false;
+    }
+    schema << "\n";
+    schema.close();
+
+    // 2. Leer CSV e insertar
+    ifstream csv(s->path);
     if (!csv.is_open()) {
-        std::cerr << "No se pudo abrir: " << s->path << "\n";
+        cerr << "No se pudo abrir: " << s->path << "\n";
         return;
     }
 
 
-    std::string header_line;
-    std::getline(csv, header_line);
+    string header;
+    getline(csv, header);
 
-    std::vector<std::string> csv_headers;
-    std::stringstream ssh(header_line);
-    std::string h;
-    while (std::getline(ssh, h, ',')) {
-
-        h.erase(0, h.find_first_not_of(" \t\r\n"));
-        h.erase(h.find_last_not_of(" \t\r\n") + 1);
-        csv_headers.push_back(h);
+    
+    int total = 0;
+    bool first_col = true;
+    for (auto& col : s->columns) {
+        if (first_col) { first_col = false; continue; } // saltar id
+        total += getTypeSize(col.second);
     }
-    
-    //if (csv_headers.size() != s->values.size()) {         //Esto es si, si o si necestiamos k esten todas las columnas, tambien podrias ingresar con valor default
-    //    std::cerr << "Se pasaron ms columnas que las definidas"<< "\n";
-    //    return;
-    //    
-    //}
-    
-    
-    //for (size_t i = 0; i < csv_headers.size(); i++) {
-    //    if (csv_headers[i] != s->values[i].first) {   //Si importa el nombre, podriamos cambiarlo con que solo importe el tipo nc
-    //       std::cerr << Se esperaba otro nombre de columna << "'\n";
-    //       return;
-    //    }
-    //}
 
+    if (total > 64) {
+        cerr << "Error: schema supera 64 bytes\n";
+        return;
+    }
 
-    //std::ofstream schema("archivos/" + s->tabla + ".schema");
-    //schema << "id:int,";      auto incremento manejado x el sf, no seguro si se mantedra asi
-    //for (size_t i = 0; i < s->values.size(); i++) {
-    //    if (i > 0) schema << ",";
-    //    schema << s->values[i].first << ":" << s->values[i].second;
-    //}
-    //schema << "\n";
-    //schema.close();
-
-    
     SequentialFile<int> sf("archivos/"+s->tabla+".dat","archivos/"+s->tabla+"_aux.dat", 50);
 
-    std::string line;
+    string line;
     int count = 0;
 
-    while (std::getline(csv, line)) {
+    while (getline(csv, line)) {
         if (line.empty()) continue;
+        line.erase(remove(line.begin(), line.end(), '\r'), line.end());
 
-        std::vector<std::string> cols;
-        std::stringstream ss(line);
-        std::string col;
-        while (std::getline(ss, col, ',')) {
-            col.erase(0, col.find_first_not_of(" \t\r\n"));
-            col.erase(col.find_last_not_of(" \t\r\n") + 1);
-            cols.push_back(col);
+        vector<string> vals;
+        stringstream ss(line);
+        string v;
+        while (getline(ss, v, ',')) vals.push_back(v);
+
+        char buffer[64] = {0};
+        int offset = 0;
+        int csv_i = 0; // indice del CSV (sin id)
+
+        for (auto& col : s->columns) {
+            // saltar columna incremental
+            if (col.second.find("incremental") != string::npos) continue;
+            if (csv_i >= vals.size()) break;
+
+            serializeField(buffer + offset, vals[csv_i], col.second);
+            offset += getTypeSize(col.second);
+            csv_i++;
         }
 
-        
-        //if (cols.size() != s->values.size()) {
-        //    std::cerr << "Fila incorrecta\n";  X si hay filas faltantes, solo se salta
-        //    continue;
-        //}
-
-        
-        //std::string data_str = "";
-        //for (size_t i = 0; i < cols.size(); i++) {
-        //    if (i > 0) data_str += "|";
-        //    data_str += cols[i];
-        //}
-
-        //sf.add(data_str);
+        sf.add(buffer, offset);
         count++;
     }
 
     csv.close();
-    std::cout << "Tabla '" << s->tabla << "' creada con " << count << " registros\n";
+    cout << "Tabla '" << s->tabla << "' creada con " << count << " registros\n";
 }
- 
+
 void EVALVisitor::visit(InsertStmt* s) {
     auto cols = leerSchema("archivos/"+s->table_name+".schema");
 
@@ -441,15 +428,26 @@ vector<pair<string,string>> leerSchema(const string& path) {
     ifstream f(path);
     string line;
     getline(f, line);
+    if (!line.empty() && line.back() == '\r') line.pop_back();
+
     stringstream ss(line);
     string token;
     while (getline(ss, token, ',')) {
-        auto pos = token.find(':');
-        string nombre = token.substr(0, pos);
-        string tipo   = token.substr(pos+1);
+        token.erase(0, token.find_first_not_of(" \t\r\n"));
+        token.erase(token.find_last_not_of(" \t\r\n") + 1);
+
+        stringstream ts(token);
+        string nombre, tipo, extra;
+        getline(ts, nombre, ':');
+        getline(ts, tipo, ':');  
+        
         cols.push_back({nombre, tipo});
     }
     return cols;
+}
+
+string getTipo(const string& raw) {
+    return raw.substr(0, raw.find(':'));
 }
 
 string getIndex(const string& tabla, const string& columna) {

@@ -43,4 +43,5 @@ void serializeField(char* buf, const string& val, const string& tipo);
 string deserializeField(const char* buf, const string& tipo);
 vector<pair<string,string>> leerSchema(const string& path);
 string getIndex(const string& tabla, const string& columna);
+string getTipo(const string& raw);
 #endif // VISITOR_H
