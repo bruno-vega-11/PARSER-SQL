@@ -11,6 +11,50 @@ inline bool isNullRID(const RID& r) { return r.page_id == -1 && r.slot == -1; }
 using PageID = int;
 static constexpr PageID NULL_PAGE = -1;
 
+template<int N>
+struct FixedString {
+    char data[N];
+
+    FixedString() {
+        memset(data, 0, N);
+    }
+
+    FixedString(const char* s) {
+        memset(data, 0, N);
+        memcpy(data, s, min((int)strlen(s), N));
+    }
+
+    FixedString(const std::string& s) {
+        memset(data, 0, N);
+        memcpy(data, s.c_str(), min((int)s.size(), N));
+    }
+
+    bool operator<(const FixedString& other) const {
+        return strncmp(data, other.data, N) < 0;
+    }
+
+    bool operator>(const FixedString& other) const {
+        return strncmp(data, other.data, N) > 0;
+    }
+
+    bool operator==(const FixedString& other) const {
+        return strncmp(data, other.data, N) == 0;
+    }
+
+    bool operator<=(const FixedString& other) const {
+        return !(*this > other);
+    }
+
+    bool operator>=(const FixedString& other) const {
+        return !(*this < other);
+    }
+};
+
+template<int N>
+ostream& operator<<(ostream& os, const FixedString<N>& fs) {
+    return os.write(fs.data, strnlen(fs.data, N));
+}
+
 template<typename TKey>
 static constexpr int computeMaxKeys() {
     int overhead  = static_cast<int>(sizeof(bool) + 3*sizeof(int) + sizeof(PageID));
@@ -42,55 +86,23 @@ private:
     static constexpr int META_OFFSET_ROOT = sizeof(int);
     PageID cachedRoot = NULL_PAGE;
 
-    void loadMeta() {
-        file.seekg(0, ios::end);
-        streamsize sz = file.tellg();
-        if (sz < PAGE_SIZE) {
-            nextPage = 1; cachedRoot = NULL_PAGE; saveMeta();
-        } else {
-            Page p{}; file.seekg(0); file.read(p.data, PAGE_SIZE);
-            memcpy(&nextPage,   p.data + META_OFFSET_NEXT, sizeof(int));
-            memcpy(&cachedRoot, p.data + META_OFFSET_ROOT, sizeof(PageID));
-        }
-    }
-    void saveMeta() {
-        Page p{};
-        memcpy(p.data + META_OFFSET_NEXT, &nextPage,   sizeof(int));
-        memcpy(p.data + META_OFFSET_ROOT, &cachedRoot, sizeof(PageID));
-        file.seekp(0); file.write(p.data, PAGE_SIZE); file.flush();
-    }
+    void loadMeta();
+    void saveMeta();
+
     mutable int readCount = 0, writeCount = 0;
 
 public:
-    explicit Disk(const string& filename) {
-        file.open(filename, ios::in | ios::out | ios::binary);
-        if (!file.is_open()) {
-            file.open(filename, ios::out | ios::binary);
-            file.close();
-            file.open(filename, ios::in | ios::out | ios::binary);
-        }
-        loadMeta();
-    }
-    Page read(PageID id) {
-        ++readCount; Page p{};
-        file.seekg((long long)id * PAGE_SIZE);
-        file.read(p.data, PAGE_SIZE); return p;
-    }
-    void write(PageID id, const Page& p) {
-        ++writeCount;
-        file.seekp((long long)id * PAGE_SIZE);
-        file.write(p.data, PAGE_SIZE); file.flush(); saveMeta();
-    }
-    PageID alloc() {
-        PageID id = nextPage++; Page p{}; write(id, p); return id;
-    }
-    void saveRoot(PageID root) { cachedRoot = root; saveMeta(); }
-    PageID loadRoot() const { return cachedRoot; }
-    void resetCounters()     { readCount = writeCount = 0; }
-    int totalReads()   const { return readCount;  }
-    int totalWrites()  const { return writeCount; }
-    int totalAccesses()const { return readCount + writeCount; }
-    int pageCount()    const { return nextPage; }
+    explicit Disk(const string& filename);
+    Page read(PageID id);
+    void write(PageID id, const Page& p);
+    PageID alloc();
+    void saveRoot(PageID root);
+    PageID loadRoot() const;
+    void resetCounters();
+    int totalReads()   const;
+    int totalWrites()  const;
+    int totalAccesses()const;
+    int pageCount()    const;
 };
 
 template<typename TKey>
@@ -403,7 +415,7 @@ public:
     vector<RID> searchAll(const TKey& key) const { // mas a la izquierda de la llave q queremos
         vector<RID> res; 
 
-        // 🔥 1. bajar desde la raíz (tipo lower_bound)
+        // bajar desde la raíz (tipo lower_bound)
         PageID curr = root;
 
         while (true) {
@@ -418,7 +430,7 @@ public:
             curr = n->children[i];
         }
 
-        // 🔥 2. recorrer hojas hacia la derecha
+        // recorrer hojas hacia la derecha
         while (curr != NULL_PAGE) {
             Page p = disk.read(curr);
             const NodeT* n = asNode(p);

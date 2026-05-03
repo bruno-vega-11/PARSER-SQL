@@ -1,0 +1,1 @@
+nombre:char[10],apellido:char[10],edad:int

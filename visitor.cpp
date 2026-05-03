@@ -40,19 +40,183 @@ void CreateTableStmt::accept(Visitor* visitor) {
 
 ///////////////////////////////////////////////////////////////////////////////////
 void EVALVisitor::visit(SelectStmt* s) {
-    SequentialFile<int> sf("archivos/"+s->table + ".dat", "archivos/"+s->table + "_aux.dat", 4);
+    auto cols = leerSchema("archivos/"+s->table+".schema");
+
+    vector<int> offsets;
+    int offset = 0;
+    for (auto& col : cols) {
+        offsets.push_back(offset);
+        offset += getTypeSize(col.second);
+    }
+
+    SequentialFile<int> sf("archivos/"+s->table+".dat","archivos/"+s->table+"_aux.dat", 50);
 
     if (s->where_cond == nullptr) {
         auto records = sf.scanAll();
-        cout << "Scan exitoso";
+
+        cout << "id\t";
+        for (auto& col : cols) cout << col.first << "\t";
+        cout << "\n";
+        cout << string(40, '-') << "\n";
+
         for (auto& r : records) {
-            std::cout << r.key << " ... \n";
+            cout << r.key << "\t";
+            for (int i = 0; i < cols.size(); i++) {
+                string val = deserializeField(r.data + offsets[i], cols[i].second);
+                cout << val << "\t";
+            }
+            cout << "\n";
+        }
+        cout << "Total: " << records.size() << " registros\n";
+    } else {
+        if (BinaryExp* b = dynamic_cast<BinaryExp*>(s->where_cond)) {
+            IdExp* campo = dynamic_cast<IdExp*>(b->left);
+            NumberExp* valor = dynamic_cast<NumberExp*>(b->right);
+
+            if (!campo || !valor) {
+                cerr << "WHERE mal hecho:'v\n"; return;
+            }
+
+            if (campo->value == "id") {
+                cout << "id\t";
+                for (auto& col : cols) cout << col.first << "\t";
+                cout << "\n" << string(40,'-') << "\n";
+                if (b->op == EQUAL_OP) {
+                    try {
+                        auto [rec, ios] = sf.search(valor->value);
+                        cout << rec.key << "\t";
+   
+                        int off = 0;
+                        for (int i = 0; i < cols.size(); i++) {
+                            cout << deserializeField(rec.data + off, cols[i].second) << "\t";
+                            off += getTypeSize(cols[i].second);
+                        }
+                        cout << "\n";
+                    } catch (...) {
+                        cout << "No habia\n";
+                    }
+                }
+            } else {
+                auto records = sf.scanAll();
+                
+                int col_offset = 0;
+                string col_tipo = "";
+                for (auto& col : cols) {
+                    if (col.first == campo->value) {
+                        col_tipo = col.second;
+                        break;
+                    }
+                    col_offset += getTypeSize(col.second);
+                }
+
+                if (col_tipo.empty()) {
+                    cerr << "Columna '" << campo->value << "' no existe\n";
+                    return;
+                }
+
+                cout << "id\t";
+                for (auto& col : cols) cout << col.first << "\t";
+                cout << "\n" << string(40,'-') << "\n";
+
+                for (auto& r : records) {
+                    string val_rec = deserializeField(r.data + col_offset, col_tipo);
+                    string val_cond = to_string(valor->value);
+
+                    bool cumple = false;
+                    if (col_tipo == "int") {
+                        int a = stoi(val_rec), b2 = stoi(val_cond);
+                        switch(b->op) {
+                            case EQUAL_OP: cumple = a == b2; break;
+                            case LEQ_OP:   cumple = a <= b2; break;
+                            case LES_OP:   cumple = a <  b2; break;
+                            case GEQ_OP:   cumple = a >= b2; break;
+                            case GER_OP:   cumple = a >  b2; break;
+                            default: break;
+                        }
+                    } else {
+                        cumple = (val_rec == val_cond);
+                    }
+
+                    if (cumple) {
+                        cout << r.key << "\t";
+                        int off = 0;
+                        for (auto& col : cols) {
+                            cout << deserializeField(r.data + off, col.second) << "\t";
+                            off += getTypeSize(col.second);
+                        }
+                        cout << "\n";
+                    }
+                }
+            }
+
+        } else if (BetweenEXp* be = dynamic_cast<BetweenEXp*>(s->where_cond)) {
+            IdExp* campo = dynamic_cast<IdExp*>(be->id);
+            int low  = dynamic_cast<NumberExp*>(be->low)->value;
+            int high = dynamic_cast<NumberExp*>(be->high)->value;
+
+            // imprimir header
+            cout << "id\t";
+            for (auto& col : cols) cout << col.first << "\t";
+            cout << "\n" << string(40,'-') << "\n";
+
+            if (campo->value == "id") {
+                auto records = sf.rangeSearch(low, high);
+                for (auto& r : records) {
+                    cout << r.key << "\t";
+                    int off = 0;
+                    for (auto& col : cols) {
+                        cout << deserializeField(r.data + off, col.second) << "\t";
+                        off += getTypeSize(col.second);
+                    }
+                    cout << "\n";
+                }
+            } else {
+                int col_offset = 0;
+                string col_tipo = "";
+                for (auto& col : cols) {
+                    if (col.first == campo->value) {
+                        col_tipo = col.second;
+                        break;
+                    }
+                    col_offset += getTypeSize(col.second);
+                }
+
+                if (col_tipo.empty()) {
+                    cerr << "Columna '" << campo->value << "' no existe\n";
+                    return;
+                }
+
+                auto records = sf.scanAll();
+                for (auto& r : records) {
+                    string val_rec = deserializeField(r.data + col_offset, col_tipo);
+
+                    bool cumple = false;
+                    if (col_tipo == "int") {
+                        int v = stoi(val_rec);
+                        cumple = (v >= low && v <= high);
+                    } else if (col_tipo == "float") {
+                        float v = stof(val_rec);
+                        cumple = (v >= low && v <= high);
+                    } else {
+                        cumple = (val_rec >= to_string(low) && val_rec <= to_string(high));
+                    }
+
+                    if (cumple) {
+                        cout << r.key << "\t";
+                        int off = 0;
+                        for (auto& col : cols) {
+                            cout << deserializeField(r.data + off, col.second) << "\t";
+                            off += getTypeSize(col.second);
+                        }
+                        cout << "\n";
+                    }
+                }
+            }
         }
     }
-    
 }
-void EVALVisitor::visit(CreateTableStmt* s) {
 
+void EVALVisitor::visit(CreateTableStmt* s) {
     std::ifstream csv(s->path);
     if (!csv.is_open()) {
         std::cerr << "No se pudo abrir: " << s->path << "\n";
@@ -128,7 +292,7 @@ void EVALVisitor::visit(CreateTableStmt* s) {
         //    data_str += cols[i];
         //}
 
-        //sf.add_auto(data_str);
+        //sf.add(data_str);
         count++;
     }
 
@@ -136,6 +300,166 @@ void EVALVisitor::visit(CreateTableStmt* s) {
     std::cout << "Tabla '" << s->tabla << "' creada con " << count << " registros\n";
 }
  
+void EVALVisitor::visit(InsertStmt* s) {
+    auto cols = leerSchema("archivos/"+s->table_name+".schema");
+
+    // Calcular tamaño total
+    int total = 0;
+    for (auto& col : cols) total += getTypeSize(col.second);
+
+    if (total > 64) {
+        cerr << "Error: schema supera 64 bytes\n";
+        return;
+    }
+
+    // Serializar valores al buffer
+    char buffer[64] = {0};
+    int offset = 0;
+    int i = 0;
+    for (Exp* e : s->values) {
+        string val = "";
+        if (StringExp* se = dynamic_cast<StringExp*>(e))
+            val = se->value;
+        else if (NumberExp* ne = dynamic_cast<NumberExp*>(e))
+            val = to_string(ne->value);
+
+        serializeField(buffer + offset, val, cols[i].second);
+        offset += getTypeSize(cols[i].second);
+        i++;
+    }
+
+    SequentialFile<int> sf("archivos/"+s->table_name+".dat","archivos/"+s->table_name+"_aux.dat", 50);
+
+    // Usar add con buffer binario directo
+    Record<int> rec;
+    // autoincremento lo maneja el SF internamente
+    sf.add(buffer, total); // limpio, autoincrementa
+    cout << "Insertado en '" << s->table_name << "'\n";
+
+}
+
+void EVALVisitor::visit(CreateIndexStmt* s) {
+    if (s->op != BTREE) {
+        cerr << "Solo BTREE implementado por ahora\n";
+        return;
+    }
+
+    auto cols = leerSchema("archivos/"+s->tableName+".schema");
+    int col_offset = 0;
+    string col_tipo = "";
+    for (auto& col : cols) {
+        if (col.first == s->indexName) {
+            col_tipo = col.second;
+            break;
+        }
+        col_offset += getTypeSize(col.second);
+    }
+
+    if (col_tipo.empty()) {
+        cerr << "Columna '" << s->indexName << "' no existe\n";
+        return;
+    }
+    if (col_tipo != "int") {
+        cerr << "BTree solo soporta int por ahora\n";
+        return;
+    }
+
+    SequentialFile<int> sf("archivos/"+s->tableName+".dat","archivos/"+s->tableName+"_aux.dat", 50);
+
+    //Btree creado
+    string btree_path = "archivos/"+s->tableName+"_"+s->indexName+".btree";
+    Disk disk(btree_path);
+    BPlusTree<int> btree(disk);
+
+    auto records = sf.scanAllWithPtr();
+    for (auto& [rec, ptr] : records) {
+        int val;
+        memcpy(&val, rec.data + col_offset, sizeof(int));
+        btree.insert(val, RID{(int)ptr.page_id, ptr.record_idx});
+    }
+
+
+    ofstream idx("archivos/"+s->tableName+".indexes", ios::app);
+    idx << s->indexName << ":btree\n";
+    idx.close();
+
+    cout << "Indice BTREE creado sobre '" << s->indexName<< "' en tabla '" << s->tableName << "'\n";
+}
 
 ///////////////////////////////////////////////////////////////////////////////////
+//Helpers
 
+int getTypeSize(const string& tipo) {
+    if (tipo == "int")    return 4;
+    if (tipo == "float")  return 4;
+    if (tipo == "double") return 8;
+    if (tipo.find("char[") != string::npos) {
+        size_t start = tipo.find('[') + 1;
+        size_t end   = tipo.find(']');
+        string num = tipo.substr(start, end - start);
+        return stoi(num);
+    }
+    return 0;
+}
+
+void serializeField(char* buf, const string& val, const string& tipo) {
+    if (tipo == "int") {
+        int v = stoi(val);
+        memcpy(buf, &v, 4);
+    } else if (tipo == "float") {
+        float v = stof(val);
+        memcpy(buf, &v, 4);
+    } else if (tipo == "double") {
+        double v = stod(val);
+        memcpy(buf, &v, 8);
+    } else if (tipo.find("char[") != string::npos) {
+        int n = stoi(tipo.substr(5, tipo.size()-6));
+        memset(buf, 0, n);
+        strncpy(buf, val.c_str(), n-1);
+    }
+}
+
+string deserializeField(const char* buf, const string& tipo) {
+    if (tipo == "int") {
+        int v; memcpy(&v, buf, 4);
+        return to_string(v);
+    } else if (tipo == "float") {
+        float v; memcpy(&v, buf, 4);
+        return to_string(v);
+    } else if (tipo == "double") {
+        double v; memcpy(&v, buf, 8);
+        return to_string(v);
+    } else if (tipo.find("char[") != string::npos) {
+        int n = stoi(tipo.substr(5, tipo.size()-6));
+        return string(buf, strnlen(buf, n));
+    }
+    return "";
+}
+
+vector<pair<string,string>> leerSchema(const string& path) {
+    vector<pair<string,string>> cols;
+    ifstream f(path);
+    string line;
+    getline(f, line);
+    stringstream ss(line);
+    string token;
+    while (getline(ss, token, ',')) {
+        auto pos = token.find(':');
+        string nombre = token.substr(0, pos);
+        string tipo   = token.substr(pos+1);
+        cols.push_back({nombre, tipo});
+    }
+    return cols;
+}
+
+string getIndex(const string& tabla, const string& columna) {
+    ifstream f("archivos/"+tabla+".indexes");
+    if (!f.is_open()) return "";
+    string line;
+    while (getline(f, line)) {
+        auto pos = line.find(':');
+        if (line.substr(0, pos) == columna)
+            return line.substr(pos+1);
+    }
+    return "";
+}

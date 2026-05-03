@@ -4,6 +4,8 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <vector>
+#include <utility>
 
 // --- Implementación RecordPointer ---
 RecordPointer::RecordPointer() : in_aux(false), page_id(-1), record_idx(-1) {}
@@ -39,22 +41,22 @@ long DiskManager::get_page_count() {
     file.seekg(0, std::ios::end);
     long bytes = file.tellg();
     file.clear();
-    return bytes / PAGE_SIZE;
+    return bytes / SEQ_PAGE_SIZE;
 }
 
 template <typename KeyType>
-void DiskManager::read_page(long page_id, Page<KeyType>& page) {
+void DiskManager::read_page(long page_id, SeqPage<KeyType>& page) {
     file.clear();
-    file.seekg(page_id * PAGE_SIZE, std::ios::beg);
-    file.read(reinterpret_cast<char*>(&page), sizeof(Page<KeyType>));
+    file.seekg(page_id * SEQ_PAGE_SIZE, std::ios::beg);
+    file.read(reinterpret_cast<char*>(&page), sizeof(SeqPage<KeyType>));
     read_count++;
 }
 
 template <typename KeyType>
-void DiskManager::write_page(long page_id, const Page<KeyType>& page) {
+void DiskManager::write_page(long page_id, const SeqPage<KeyType>& page) {
     file.clear();
-    file.seekp(page_id * PAGE_SIZE, std::ios::beg);
-    file.write(reinterpret_cast<const char*>(&page), sizeof(Page<KeyType>));
+    file.seekp(page_id * SEQ_PAGE_SIZE, std::ios::beg);
+    file.write(reinterpret_cast<const char*>(&page), sizeof(SeqPage<KeyType>));
     write_count++;
 }
 
@@ -77,7 +79,7 @@ SequentialFile<KeyType>::SequentialFile(const std::string& data_name, const std:
 
     // restaurar el conteo exacto de registros en aux
     if (total_aux_pages > 0) {
-        Page<KeyType> last_aux;
+        SeqPage<KeyType> last_aux;
         // leemos solo la ultima pagina auxiliar para ver cuantos registros tiene
         aux_file.read_page(total_aux_pages - 1, last_aux);
 
@@ -98,13 +100,13 @@ SequentialFile<KeyType>::SequentialFile(const std::string& data_name, const std:
 }
 
 template <typename KeyType>
-void SequentialFile<KeyType>::fetch_page(const RecordPointer& ptr, Page<KeyType>& page) {
+void SequentialFile<KeyType>::fetch_page(const RecordPointer& ptr, SeqPage<KeyType>& page) {
     if (ptr.in_aux) aux_file.read_page(ptr.page_id, page);
     else data_file.read_page(ptr.page_id, page);
 }
 
 template <typename KeyType>
-void SequentialFile<KeyType>::save_page(const RecordPointer& ptr, const Page<KeyType>& page) {
+void SequentialFile<KeyType>::save_page(const RecordPointer& ptr, const SeqPage<KeyType>& page) {
     if (ptr.in_aux) aux_file.write_page(ptr.page_id, page);
     else data_file.write_page(ptr.page_id, page);
 }
@@ -113,7 +115,7 @@ template <typename KeyType>
 RecordPointer SequentialFile<KeyType>::find_predecessor_or_exact(KeyType search_key) {
     if (head_ptr.is_null()) return RecordPointer();
 
-    Page<KeyType> head_page;
+    SeqPage<KeyType> head_page;
     fetch_page(head_ptr, head_page);
     if (search_key < head_page.records[head_ptr.record_idx].key) {
         return RecordPointer();
@@ -121,7 +123,7 @@ RecordPointer SequentialFile<KeyType>::find_predecessor_or_exact(KeyType search_
 
     long l = 0;
     long u = total_data_pages - 1;
-    Page<KeyType> current_page;
+    SeqPage<KeyType> current_page;
     RecordPointer last_seen = head_ptr;
 
     while (l <= u && total_data_pages > 0) {
@@ -174,7 +176,7 @@ std::pair<Record<KeyType>, int> SequentialFile<KeyType>::search(KeyType search_k
     RecordPointer ptr = find_predecessor_or_exact(search_key);
 
     if (!ptr.is_null()) {
-        Page<KeyType> page;
+        SeqPage<KeyType> page;
         fetch_page(ptr, page);
         Record<KeyType>& rec = page.records[ptr.record_idx];
 
@@ -194,7 +196,7 @@ void SequentialFile<KeyType>::add(const Record<KeyType>& new_record) {
 
     //  Evitar Claves Duplicadas
     if (!pred_ptr.is_null()) {
-        Page<KeyType> check_page;
+        SeqPage<KeyType> check_page;
         fetch_page(pred_ptr, check_page);
         if (check_page.records[pred_ptr.record_idx].key == new_record.key &&
             !check_page.records[pred_ptr.record_idx].is_deleted) {
@@ -202,7 +204,7 @@ void SequentialFile<KeyType>::add(const Record<KeyType>& new_record) {
         }
     }
 
-    Page<KeyType> aux_page;
+    SeqPage<KeyType> aux_page;
     long target_aux_page = total_aux_pages > 0 ? total_aux_pages - 1 : 0;
 
     if (total_aux_pages > 0) {
@@ -211,7 +213,7 @@ void SequentialFile<KeyType>::add(const Record<KeyType>& new_record) {
 
     if (aux_page.record_count >= get_blocking_factor<KeyType>()) {
         target_aux_page++;
-        aux_page = Page<KeyType>();
+        aux_page = SeqPage<KeyType>();
         total_aux_pages++;
     } else if (total_aux_pages == 0) {
         total_aux_pages = 1;
@@ -229,7 +231,7 @@ void SequentialFile<KeyType>::add(const Record<KeyType>& new_record) {
             record_to_insert.next_ptr = aux_page.records[pred_ptr.record_idx].next_ptr;
             aux_page.records[pred_ptr.record_idx].next_ptr = new_rec_ptr;
         } else {
-            Page<KeyType> pred_page;
+            SeqPage<KeyType> pred_page;
             fetch_page(pred_ptr, pred_page);
 
             record_to_insert.next_ptr = pred_page.records[pred_ptr.record_idx].next_ptr;
@@ -272,11 +274,21 @@ void SequentialFile<KeyType>::add(const std::string& payload) {
     this->add(rec);
 }
 
+//metodo 3
+template <typename KeyType>
+void SequentialFile<KeyType>::add(const char* buffer, size_t size) {
+    Record<KeyType> rec;
+    auto_increment_counter++;
+    rec.key = auto_increment_counter;
+    memset(rec.data, 0, sizeof(rec.data));
+    memcpy(rec.data, buffer, size);
+    this->add(rec);
+}
 template <typename KeyType>
 void SequentialFile<KeyType>::remove(KeyType key) {
     RecordPointer ptr = find_predecessor_or_exact(key);
     if (!ptr.is_null()) {
-        Page<KeyType> page;
+        SeqPage<KeyType> page;
         fetch_page(ptr, page);
         if (page.records[ptr.record_idx].key == key && !page.records[ptr.record_idx].is_deleted) {
             page.records[ptr.record_idx].is_deleted = true;
@@ -293,7 +305,7 @@ std::vector<Record<KeyType>> SequentialFile<KeyType>::rangeSearch(KeyType begin_
     RecordPointer current_ptr = find_predecessor_or_exact(begin_key);
 
     if (!current_ptr.is_null()) {
-         Page<KeyType> p;
+         SeqPage<KeyType> p;
          fetch_page(current_ptr, p);
          if (p.records[current_ptr.record_idx].key < begin_key) {
              current_ptr = p.records[current_ptr.record_idx].next_ptr;
@@ -302,7 +314,7 @@ std::vector<Record<KeyType>> SequentialFile<KeyType>::rangeSearch(KeyType begin_
          current_ptr = head_ptr;
     }
 
-    Page<KeyType> current_page;
+    SeqPage<KeyType> current_page;
     while (!current_ptr.is_null()) {
         fetch_page(current_ptr, current_page);
         Record<KeyType>& rec = current_page.records[current_ptr.record_idx];
@@ -322,8 +334,8 @@ void SequentialFile<KeyType>::rebuild() {
     std::string temp_filename = "temp_datos.dat";
     DiskManager new_data(temp_filename);
 
-    Page<KeyType> current_read_page;
-    Page<KeyType> new_page;
+    SeqPage<KeyType> current_read_page;
+    SeqPage<KeyType> new_page;
     long new_page_id = 0;
 
     RecordPointer current_read_ptr = head_ptr;
@@ -348,7 +360,7 @@ void SequentialFile<KeyType>::rebuild() {
                 new_page.records[new_page.record_count - 1].next_ptr = RecordPointer(false, new_page_id + 1, 0);
                 new_data.write_page(new_page_id, new_page);
                 new_page_id++;
-                new_page = Page<KeyType>();
+                new_page = SeqPage<KeyType>();
             }
         }
         current_read_ptr = rec.next_ptr;
@@ -360,7 +372,7 @@ void SequentialFile<KeyType>::rebuild() {
         total_data_pages = new_page_id + 1;
     } else {
         if (new_page_id > 0) {
-            Page<KeyType> last_page;
+            SeqPage<KeyType> last_page;
             new_data.read_page(new_page_id - 1, last_page);
             last_page.records[get_blocking_factor<KeyType>() - 1].next_ptr = RecordPointer();
             new_data.write_page(new_page_id - 1, last_page);
@@ -389,13 +401,30 @@ void SequentialFile<KeyType>::rebuild() {
 }
 
 template <typename KeyType>
+std::vector<std::pair<Record<KeyType>, RecordPointer>> SequentialFile<KeyType>::scanAllWithPtr() {
+    std::vector<std::pair<Record<KeyType>, RecordPointer>> results;
+    RecordPointer current_ptr = head_ptr;
+    SeqPage<KeyType> current_page;
+
+    while (!current_ptr.is_null()) {
+        fetch_page(current_ptr, current_page);
+        Record<KeyType>& rec = current_page.records[current_ptr.record_idx];
+        if (!rec.is_deleted) {
+            results.push_back({rec, current_ptr});
+        }
+        current_ptr = rec.next_ptr;
+    }
+    return results;
+}
+
+template <typename KeyType>
 std::vector<Record<KeyType>> SequentialFile<KeyType>::scanAll() {
     data_file.reset_stats();
     aux_file.reset_stats();
 
     std::vector<Record<KeyType>> results;
     RecordPointer current_ptr = head_ptr;
-    Page<KeyType> current_page;
+    SeqPage<KeyType> current_page;
 
     while (!current_ptr.is_null()) {
         fetch_page(current_ptr, current_page);
@@ -420,7 +449,6 @@ std::vector<Record<KeyType>> SequentialFile<KeyType>::searchByText(const std::st
     for (const auto& rec : toda_la_tabla) {
         std::string datos_registro = rec.data;
 
-        // std::string::npos significa "no se encontro"
         if (datos_registro.find(query) != std::string::npos) {
             resultados_filtrados.push_back(rec);
         }
@@ -431,5 +459,5 @@ std::vector<Record<KeyType>> SequentialFile<KeyType>::searchByText(const std::st
 
 
 template class SequentialFile<int>;
-template void DiskManager::read_page<int>(long, Page<int>&);
-template void DiskManager::write_page<int>(long, const Page<int>&);
+template void DiskManager::read_page<int>(long, SeqPage<int>&);
+template void DiskManager::write_page<int>(long, const SeqPage<int>&);

@@ -26,8 +26,8 @@ int main(int argc, const char* argv[]) {
     }
     infile.close();
 
-    Scanner scanner(input.c_str());   // <-- este faltaba
-    Parser parser(&scanner);          // <-- este faltaba
+    Scanner scanner(input.c_str());   
+    Parser parser(&scanner);        
 
     Program* ast = nullptr;
     ofstream out("ast.dot");
@@ -45,7 +45,7 @@ int main(int argc, const char* argv[]) {
     out.close();
 
     if (ast != nullptr) {
-        EVALVisitor eval;             // <-- asegúrate que visitor.h esté incluido
+        EVALVisitor eval;             
         for (Stmt* s : ast->stmtList) {
             s->accept(&eval);
         }

@@ -1,7 +1,5 @@
 === STDOUT ===
 Parseo exitoso
-Codigo:
-2 + 3 * 4
-Interprete:14
+Indice BTREE creado sobre 'edad' en tabla 'hola'
 
 === STDERR ===
