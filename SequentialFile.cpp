@@ -66,37 +66,40 @@ void DiskManager::write_page(long page_id, const SeqPage<KeyType>& page) {
 
 template <typename KeyType>
 SequentialFile<KeyType>::SequentialFile(const std::string& data_name, const std::string& aux_name, size_t k)
-    : data_file(data_name), aux_file(aux_name), aux_record_count(0), total_data_pages(0), total_aux_pages(0), K_LIMIT(k) {
+    : data_file(data_name), aux_file(aux_name), aux_record_count(0), 
+      total_data_pages(0), total_aux_pages(0), K_LIMIT(k),
+      data_filename(data_name), aux_filename(aux_name),
+      meta_filename(data_name + ".meta") 
+{
     total_data_pages = data_file.get_page_count();
-    total_aux_pages = aux_file.get_page_count();
+    total_aux_pages  = aux_file.get_page_count();
 
-    //incializar head_ptr
-    if (total_data_pages > 0) {
-        head_ptr = RecordPointer(false, 0, 0); //registro 0
-    } else {
-        head_ptr = RecordPointer(); // vacia
-    }
-
-    // restaurar el conteo exacto de registros en aux
+    // restaurar conteo aux
     if (total_aux_pages > 0) {
         SeqPage<KeyType> last_aux;
-        // leemos solo la ultima pagina auxiliar para ver cuantos registros tiene
         aux_file.read_page(total_aux_pages - 1, last_aux);
-
-        // el total es : paginas anteriores llenas + registros en la ultima pagina
         aux_record_count = (total_aux_pages - 1) * get_blocking_factor<KeyType>() + last_aux.record_count;
-    } else {
-        aux_record_count = 0;
     }
 
-    auto_increment_counter = 0;
-    if (total_data_pages > 0 || total_aux_pages > 0) {
-        std::vector<Record<KeyType>> todos = this->scanAll();
-        if (!todos.empty()) {
-            // como scan los trae ordenados el ultimo de la lista tiene el ID mas alto
-            auto_increment_counter = todos.back().key;
-        }
+    // cargar meta (head_ptr y auto_increment)
+    std::ifstream meta(meta_filename, std::ios::binary);
+    if (meta.is_open()) {
+        meta.read(reinterpret_cast<char*>(&head_ptr), sizeof(RecordPointer));
+        meta.read(reinterpret_cast<char*>(&auto_increment_counter), sizeof(KeyType));
+        meta.close();
+    } else {
+        // primera vez - archivo nuevo
+        head_ptr = RecordPointer();
+        auto_increment_counter = 0;
     }
+}
+
+template <typename KeyType>
+void SequentialFile<KeyType>::save_meta() {
+    std::ofstream meta(meta_filename, std::ios::binary);
+    meta.write(reinterpret_cast<const char*>(&head_ptr), sizeof(RecordPointer));
+    meta.write(reinterpret_cast<const char*>(&auto_increment_counter), sizeof(KeyType));
+    meta.close();
 }
 
 template <typename KeyType>
@@ -252,6 +255,9 @@ void SequentialFile<KeyType>::add(const Record<KeyType>& new_record) {
         auto_increment_counter = new_record.key;
     }
 
+
+    save_meta(); 
+
     if (aux_record_count >= K_LIMIT) {
         rebuild();
     }
@@ -331,52 +337,60 @@ std::vector<Record<KeyType>> SequentialFile<KeyType>::rangeSearch(KeyType begin_
 
 template <typename KeyType>
 void SequentialFile<KeyType>::rebuild() {
-    std::string temp_filename = "temp_datos.dat";
+    std::string temp_filename = data_filename + ".tmp";
     DiskManager new_data(temp_filename);
 
     SeqPage<KeyType> current_read_page;
     SeqPage<KeyType> new_page;
+
     long new_page_id = 0;
+    int last_page_id = -1;
+    int last_idx = -1;
 
     RecordPointer current_read_ptr = head_ptr;
 
     while (!current_read_ptr.is_null()) {
-        if (current_read_ptr.in_aux) {
+        if (current_read_ptr.in_aux)
             aux_file.read_page(current_read_ptr.page_id, current_read_page);
-        } else {
+        else
             data_file.read_page(current_read_ptr.page_id, current_read_page);
-        }
 
         Record<KeyType>& rec = current_read_page.records[current_read_ptr.record_idx];
 
         if (!rec.is_deleted) {
-            Record<KeyType> new_rec = rec;
-            new_rec.next_ptr = RecordPointer(false, new_page_id, new_page.record_count + 1);
-
-            new_page.records[new_page.record_count] = new_rec;
-            new_page.record_count++;
-
             if (new_page.record_count >= get_blocking_factor<KeyType>()) {
-                new_page.records[new_page.record_count - 1].next_ptr = RecordPointer(false, new_page_id + 1, 0);
                 new_data.write_page(new_page_id, new_page);
-                new_page_id++;
                 new_page = SeqPage<KeyType>();
+                new_page_id++;
             }
+
+            int curr_idx = new_page.record_count;
+
+            Record<KeyType> new_rec = rec;
+            new_rec.next_ptr = RecordPointer();
+
+            new_page.records[curr_idx] = new_rec;
+
+            if (last_page_id != -1) {
+                SeqPage<KeyType> prev_page;
+                new_data.read_page(last_page_id, prev_page);
+                prev_page.records[last_idx].next_ptr = RecordPointer(false, new_page_id, curr_idx);
+                new_data.write_page(last_page_id, prev_page);
+            }
+
+            last_page_id = new_page_id;
+            last_idx = curr_idx;
+
+            new_page.record_count++;
         }
+
         current_read_ptr = rec.next_ptr;
     }
 
     if (new_page.record_count > 0) {
-        new_page.records[new_page.record_count - 1].next_ptr = RecordPointer();
         new_data.write_page(new_page_id, new_page);
         total_data_pages = new_page_id + 1;
     } else {
-        if (new_page_id > 0) {
-            SeqPage<KeyType> last_page;
-            new_data.read_page(new_page_id - 1, last_page);
-            last_page.records[get_blocking_factor<KeyType>() - 1].next_ptr = RecordPointer();
-            new_data.write_page(new_page_id - 1, last_page);
-        }
         total_data_pages = new_page_id;
     }
 
@@ -384,22 +398,25 @@ void SequentialFile<KeyType>::rebuild() {
     data_file.close();
     aux_file.close();
 
-    std::remove("datos.dat");
-    std::rename(temp_filename.c_str(), "datos.dat");
+    std::remove(data_filename.c_str());
+    std::rename(temp_filename.c_str(), data_filename.c_str());
 
-    std::ofstream ofs("aux.dat", std::ios::trunc | std::ios::binary);
+    std::ofstream ofs(aux_filename, std::ios::trunc | std::ios::binary);
     ofs.close();
 
-    data_file.open("datos.dat");
-    aux_file.open("aux.dat");
+    data_file.open(data_filename);
+    aux_file.open(aux_filename);
 
     aux_record_count = 0;
     total_aux_pages = 0;
 
-    if (total_data_pages > 0) head_ptr = RecordPointer(false, 0, 0);
-    else head_ptr = RecordPointer();
-}
+    if (total_data_pages > 0)
+        head_ptr = RecordPointer(false, 0, 0);
+    else
+        head_ptr = RecordPointer();
 
+    save_meta(); 
+}
 template <typename KeyType>
 std::vector<std::pair<Record<KeyType>, RecordPointer>> SequentialFile<KeyType>::scanAllWithPtr() {
     std::vector<std::pair<Record<KeyType>, RecordPointer>> results;

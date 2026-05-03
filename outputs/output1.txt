@@ -1,28 +1,14 @@
 === STDOUT ===
 Parseo exitoso
-id	nombre	apellido	edad	
+DEBUG schema cols:
+  nombre='dni' tipo='INT'
+  nombre='nombre' tipo='CHAR(10)'
+id	dni	nombre	
 ----------------------------------------
-1	Nom1	Ape1	21	
-2	Nom2	Ape2	22	
-3	Nom3	Ape3	23	
-4	Nom4	Ape4	24	
-5	Nom5	Ape5	25	
-6	Nom6	Ape6	26	
-7	Nom7	Ape7	27	
-8	Nom8	Ape8	28	
-9	Nom9	Ape9	29	
-10	Nom10	Ape10	30	
-11	Nom11	Ape11	31	
-12	Nom12	Ape12	32	
-13	Nom13	Ape13	33	
-14	Nom14	Ape14	34	
-15	Nom15	Ape15	35	
-16	Nom16	Ape16	36	
-17	Nom17	Ape17	37	
-18	Nom18	Ape18	38	
-19	Nom19	Ape19	39	
-20	Nom20	Ape20	40	
-21	Juan	Perez	25	
-Total: 21 registros
+1	12345678	Juan	
+2	87654321	Ana	
+3	45678912	Carlos	
+4	78912345	Lucia	
+Total: 4 registros
 
 === STDERR ===

@@ -94,6 +94,9 @@ private:
     long total_aux_pages;
     RecordPointer head_ptr;
 
+    std::string data_filename;
+    std::string aux_filename;
+    std::string meta_filename;
     // nuevo para generar llaves automaticamente
     KeyType auto_increment_counter;
 
@@ -103,6 +106,7 @@ private:
 
 public:
     SequentialFile(const std::string& data_name, const std::string& aux_name, size_t k = 50);
+    void save_meta();
     std::pair<Record<KeyType>, int> search(KeyType search_key);
     void remove(KeyType key);
     std::vector<Record<KeyType>> rangeSearch(KeyType begin_key, KeyType end_key);

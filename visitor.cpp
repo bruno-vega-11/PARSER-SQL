@@ -42,13 +42,18 @@ void CreateTableStmt::accept(Visitor* visitor) {
 void EVALVisitor::visit(SelectStmt* s) {
     auto cols = leerSchema("archivos/"+s->table+".schema");
 
+    // DEBUG - borrar despues
+    cout << "DEBUG schema cols:\n";
+    for (auto& col : cols) {
+        cout << "  nombre='" << col.first << "' tipo='" << col.second << "'\n";
+    }
+
     vector<int> offsets;
     int offset = 0;
     for (auto& col : cols) {
         offsets.push_back(offset);
         offset += getTypeSize(col.second);
     }
-
     SequentialFile<int> sf("archivos/"+s->table+".dat","archivos/"+s->table+"_aux.dat", 50);
 
     if (s->where_cond == nullptr) {
@@ -217,6 +222,7 @@ void EVALVisitor::visit(SelectStmt* s) {
 }
 
 void EVALVisitor::visit(CreateTableStmt* s) {
+    // 1. Guardar schema
     ofstream schema("archivos/"+s->tabla+".schema");
     bool first = true;
     for (auto& col : s->columns) {
@@ -227,23 +233,27 @@ void EVALVisitor::visit(CreateTableStmt* s) {
     schema << "\n";
     schema.close();
 
-    // 2. Leer CSV e insertar
+    // 2. Abrir CSV
     ifstream csv(s->path);
     if (!csv.is_open()) {
         cerr << "No se pudo abrir: " << s->path << "\n";
         return;
     }
 
-
+    // saltar header
     string header;
     getline(csv, header);
 
-    
+    // 3. Calcular total bytes del data (sin columnas INCREMENTAL)
     int total = 0;
-    bool first_col = true;
     for (auto& col : s->columns) {
-        if (first_col) { first_col = false; continue; } // saltar id
-        total += getTypeSize(col.second);
+        if (col.second.find("INCREMENTAL") != string::npos) continue;
+        int sz = getTypeSize(getTipo(col.second));
+        if (sz == 0) {
+            cerr << "Tipo desconocido: " << col.second << "\n";
+            return;
+        }
+        total += sz;
     }
 
     if (total > 64) {
@@ -251,6 +261,7 @@ void EVALVisitor::visit(CreateTableStmt* s) {
         return;
     }
 
+    // 4. Crear SF e insertar registros
     SequentialFile<int> sf("archivos/"+s->tabla+".dat","archivos/"+s->tabla+"_aux.dat", 50);
 
     string line;
@@ -260,33 +271,46 @@ void EVALVisitor::visit(CreateTableStmt* s) {
         if (line.empty()) continue;
         line.erase(remove(line.begin(), line.end(), '\r'), line.end());
 
+        // separar valores del CSV
         vector<string> vals;
         stringstream ss(line);
         string v;
-        while (getline(ss, v, ',')) vals.push_back(v);
+        while (getline(ss, v, ',')) {
+            v.erase(0, v.find_first_not_of(" \t"));
+            v.erase(v.find_last_not_of(" \t") + 1);
+            vals.push_back(v);
+        }
 
+        // serializar al buffer
         char buffer[64] = {0};
         int offset = 0;
-        int csv_i = 0; // indice del CSV (sin id)
+        int csv_i = 0;
 
         for (auto& col : s->columns) {
-            // saltar columna incremental
-            if (col.second.find("incremental") != string::npos) continue;
-            if (csv_i >= vals.size()) break;
+            if (col.second.find("INCREMENTAL") != string::npos) continue;
+            if (csv_i >= (int)vals.size()) break;
 
-            serializeField(buffer + offset, vals[csv_i], col.second);
-            offset += getTypeSize(col.second);
+            string tipo = getTipo(col.second);
+            serializeField(buffer + offset, vals[csv_i], tipo);
+            offset += getTypeSize(tipo);
             csv_i++;
         }
 
-        sf.add(buffer, offset);
+        sf.add(buffer, total);
+        // justo antes de sf.add(buffer, total)
+        cout << "DEBUG vals: ";
+        for (auto& val : vals) cout << "'" << val << "' ";
+        cout << "\n";
+        int dni_val; memcpy(&dni_val, buffer, 4);
+        cout << "DEBUG dni en buffer=" << dni_val << "\n";
+        char nombre_val[11]={0}; memcpy(nombre_val, buffer+4, 10);
+        cout << "DEBUG nombre en buffer='" << nombre_val << "'\n";
         count++;
     }
 
     csv.close();
     cout << "Tabla '" << s->tabla << "' creada con " << count << " registros\n";
 }
-
 void EVALVisitor::visit(InsertStmt* s) {
     auto cols = leerSchema("archivos/"+s->table_name+".schema");
 
@@ -377,47 +401,50 @@ void EVALVisitor::visit(CreateIndexStmt* s) {
 //Helpers
 
 int getTypeSize(const string& tipo) {
-    if (tipo == "int")    return 4;
-    if (tipo == "float")  return 4;
-    if (tipo == "double") return 8;
-    if (tipo.find("char[") != string::npos) {
-        size_t start = tipo.find('[') + 1;
-        size_t end   = tipo.find(']');
-        string num = tipo.substr(start, end - start);
-        return stoi(num);
+    if (tipo == "INT")    return 4;
+    if (tipo == "FLOAT")  return 4;
+    if (tipo == "DOUBLE") return 8;
+    if (tipo.find("CHAR(") != string::npos) {
+        size_t start = tipo.find('(') + 1;
+        size_t end   = tipo.find(')');
+        return stoi(tipo.substr(start, end - start));
     }
     return 0;
 }
 
 void serializeField(char* buf, const string& val, const string& tipo) {
-    if (tipo == "int") {
+    if (tipo == "INT") {
         int v = stoi(val);
         memcpy(buf, &v, 4);
-    } else if (tipo == "float") {
+    } else if (tipo == "FLOAT") {
         float v = stof(val);
         memcpy(buf, &v, 4);
-    } else if (tipo == "double") {
+    } else if (tipo == "DOUBLE") {
         double v = stod(val);
         memcpy(buf, &v, 8);
-    } else if (tipo.find("char[") != string::npos) {
-        int n = stoi(tipo.substr(5, tipo.size()-6));
+    } else if (tipo.find("CHAR(") != string::npos) {
+        size_t start = tipo.find('(') + 1;
+        size_t end   = tipo.find(')');
+        int n = stoi(tipo.substr(start, end - start));
         memset(buf, 0, n);
         strncpy(buf, val.c_str(), n-1);
     }
 }
 
 string deserializeField(const char* buf, const string& tipo) {
-    if (tipo == "int") {
+    if (tipo == "INT") {
         int v; memcpy(&v, buf, 4);
         return to_string(v);
-    } else if (tipo == "float") {
+    } else if (tipo == "FLOAT") {
         float v; memcpy(&v, buf, 4);
         return to_string(v);
-    } else if (tipo == "double") {
+    } else if (tipo == "DOUBLE") {
         double v; memcpy(&v, buf, 8);
         return to_string(v);
-    } else if (tipo.find("char[") != string::npos) {
-        int n = stoi(tipo.substr(5, tipo.size()-6));
+    } else if (tipo.find("CHAR(") != string::npos) {
+        size_t start = tipo.find('(') + 1;
+        size_t end   = tipo.find(')');
+        int n = stoi(tipo.substr(start, end - start));
         return string(buf, strnlen(buf, n));
     }
     return "";
@@ -436,18 +463,36 @@ vector<pair<string,string>> leerSchema(const string& path) {
         token.erase(0, token.find_first_not_of(" \t\r\n"));
         token.erase(token.find_last_not_of(" \t\r\n") + 1);
 
-        stringstream ts(token);
-        string nombre, tipo, extra;
-        getline(ts, nombre, ':');
-        getline(ts, tipo, ':');  
+        // separar nombre y tipo por ':'
+        size_t pos = token.find(':');
+        if (pos == string::npos) continue;
         
+        string nombre = token.substr(0, pos);
+        string resto  = token.substr(pos + 1); // "INT PK INCREMENTAL" o "INT" o "CHAR(10)"
+
+        // quedarse solo con la primera palabra = el tipo
+        // pero CHAR(10) tiene parentesis, no espacios dentro
+        string tipo = resto.substr(0, resto.find(' '));
+
+        // limpiar espacios
+        nombre.erase(0, nombre.find_first_not_of(" \t"));
+        nombre.erase(nombre.find_last_not_of(" \t") + 1);
+        tipo.erase(0, tipo.find_first_not_of(" \t"));
+        tipo.erase(tipo.find_last_not_of(" \t") + 1);
+
+        // saltar columnas incrementales (no van al data buffer)
+        if (resto.find("INCREMENTAL") != string::npos) continue;
+
         cols.push_back({nombre, tipo});
     }
     return cols;
 }
 
 string getTipo(const string& raw) {
-    return raw.substr(0, raw.find(':'));
+    string tipo = raw.substr(0, raw.find(' '));
+    tipo.erase(0, tipo.find_first_not_of(" \t"));
+    tipo.erase(tipo.find_last_not_of(" \t") + 1);
+    return tipo;
 }
 
 string getIndex(const string& tabla, const string& columna) {

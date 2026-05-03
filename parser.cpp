@@ -366,7 +366,7 @@ string Parser::parseType() {
             match(Token::INT_LIT);
             string size = previous->text;
             match(Token::RPAREN);
-            typeStr = "(" + size +  ")";
+            typeStr += "(" + size +  ")";
         }
         return typeStr;
     }
