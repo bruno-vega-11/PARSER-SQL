@@ -78,6 +78,9 @@ void EVALVisitor::visit(SelectStmt* s) {
             }
 
             if (campo->value == "id") {
+                cout << "id\t";
+                for (auto& col : cols) cout << col.first << "\t";
+                cout << "\n" << string(40,'-') << "\n";
                 if (b->op == EQUAL_OP) {
                     try {
                         auto [rec, ios] = sf.search(valor->value);
@@ -212,6 +215,7 @@ void EVALVisitor::visit(SelectStmt* s) {
         }
     }
 }
+
 void EVALVisitor::visit(CreateTableStmt* s) {
     std::ifstream csv(s->path);
     if (!csv.is_open()) {
@@ -334,6 +338,54 @@ void EVALVisitor::visit(InsertStmt* s) {
 
 }
 
+void EVALVisitor::visit(CreateIndexStmt* s) {
+    if (s->op != BTREE) {
+        cerr << "Solo BTREE implementado por ahora\n";
+        return;
+    }
+
+    auto cols = leerSchema("archivos/"+s->tableName+".schema");
+    int col_offset = 0;
+    string col_tipo = "";
+    for (auto& col : cols) {
+        if (col.first == s->indexName) {
+            col_tipo = col.second;
+            break;
+        }
+        col_offset += getTypeSize(col.second);
+    }
+
+    if (col_tipo.empty()) {
+        cerr << "Columna '" << s->indexName << "' no existe\n";
+        return;
+    }
+    if (col_tipo != "int") {
+        cerr << "BTree solo soporta int por ahora\n";
+        return;
+    }
+
+    SequentialFile<int> sf("archivos/"+s->tableName+".dat","archivos/"+s->tableName+"_aux.dat", 50);
+
+    //Btree creado
+    string btree_path = "archivos/"+s->tableName+"_"+s->indexName+".btree";
+    Disk disk(btree_path);
+    BPlusTree<int> btree(disk);
+
+    auto records = sf.scanAllWithPtr();
+    for (auto& [rec, ptr] : records) {
+        int val;
+        memcpy(&val, rec.data + col_offset, sizeof(int));
+        btree.insert(val, RID{(int)ptr.page_id, ptr.record_idx});
+    }
+
+
+    ofstream idx("archivos/"+s->tableName+".indexes", ios::app);
+    idx << s->indexName << ":btree\n";
+    idx.close();
+
+    cout << "Indice BTREE creado sobre '" << s->indexName<< "' en tabla '" << s->tableName << "'\n";
+}
+
 ///////////////////////////////////////////////////////////////////////////////////
 //Helpers
 
@@ -398,4 +450,16 @@ vector<pair<string,string>> leerSchema(const string& path) {
         cols.push_back({nombre, tipo});
     }
     return cols;
+}
+
+string getIndex(const string& tabla, const string& columna) {
+    ifstream f("archivos/"+tabla+".indexes");
+    if (!f.is_open()) return "";
+    string line;
+    while (getline(f, line)) {
+        auto pos = line.find(':');
+        if (line.substr(0, pos) == columna)
+            return line.substr(pos+1);
+    }
+    return "";
 }

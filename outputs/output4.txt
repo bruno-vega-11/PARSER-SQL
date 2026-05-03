@@ -1,5 +1,7 @@
 === STDOUT ===
 Parseo exitoso
+id	nombre	apellido	edad	
+----------------------------------------
 5	Nom5	Ape5	25	
 
 === STDERR ===

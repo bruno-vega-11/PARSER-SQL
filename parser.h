@@ -3,6 +3,7 @@
 
 #include "scanner.h"    // Incluye la definición del escáner (provee tokens al parser)
 #include "ast.h"        // Incluye las definiciones para construir el Árbol de Sintaxis Abstracta (AST)
+#include "BTree.h"
 
 class Parser {
 private:

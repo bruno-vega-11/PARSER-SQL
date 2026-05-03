@@ -3,6 +3,7 @@
 
 #include <string>
 #include <ostream>
+#include "BTree.h"
 
 using namespace std;
 

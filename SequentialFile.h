@@ -12,7 +12,7 @@
 #include <cstring>
 #include <cstdio>
 
-constexpr size_t PAGE_SIZE = 4096;
+constexpr size_t SEQ_PAGE_SIZE = 4096;
 
 // 1. Puntero Lógico
 struct RecordPointer {
@@ -41,17 +41,17 @@ struct Record {
 // Cálculo de factor de bloqueo
 template <typename KeyType>
 constexpr size_t get_blocking_factor() {
-    return (PAGE_SIZE - sizeof(size_t)) / sizeof(Record<KeyType>);
+    return (SEQ_PAGE_SIZE - sizeof(size_t)) / sizeof(Record<KeyType>);
 }
 
 // 3. Estructura de Página
 template <typename KeyType>
-struct Page {
+struct SeqPage {
     size_t record_count = 0;
     Record<KeyType> records[get_blocking_factor<KeyType>()];
-    char padding[PAGE_SIZE - sizeof(size_t) - sizeof(Record<KeyType>) * get_blocking_factor<KeyType>()];
+    char padding[SEQ_PAGE_SIZE - sizeof(size_t) - sizeof(Record<KeyType>) * get_blocking_factor<KeyType>()];
     
-    Page() : record_count(0) {
+    SeqPage() : record_count(0) {
         memset(padding, 0, sizeof(padding));
     }
 };
@@ -73,10 +73,10 @@ public:
     void reset_stats();
 
     template <typename KeyType>
-    void read_page(long page_id, Page<KeyType>& page);
+    void read_page(long page_id, SeqPage<KeyType>& page);
 
     template <typename KeyType>
-    void write_page(long page_id, const Page<KeyType>& page);
+    void write_page(long page_id, const SeqPage<KeyType>& page);
     long get_page_count();
 };
 
@@ -97,8 +97,8 @@ private:
     // nuevo para generar llaves automaticamente
     KeyType auto_increment_counter;
 
-    void fetch_page(const RecordPointer& ptr, Page<KeyType>& page);
-    void save_page(const RecordPointer& ptr, const Page<KeyType>& page);
+    void fetch_page(const RecordPointer& ptr, SeqPage<KeyType>& page);
+    void save_page(const RecordPointer& ptr, const SeqPage<KeyType>& page);
     RecordPointer find_predecessor_or_exact(KeyType search_key);
 
 public:
@@ -117,6 +117,9 @@ public:
 
     // recibe los datos pero como char
     void add(const char* buffer, size_t size);
+    
+    // Para obtener todo con ptr
+    std::vector<std::pair<Record<KeyType>, RecordPointer>> scanAllWithPtr();
 };
 
 #endif // SEQUENTIAL_FILE_H

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <list>
+#include "BTree.h"
 #include <ostream>
 
 class Stmt;

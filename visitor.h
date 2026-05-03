@@ -2,7 +2,7 @@
 #define VISITOR_H
 #include "ast.h"
 #include "SequentialFile.h"
-
+#include "BTree.h"
 class Visitor {
 public:
     virtual void visit(SelectStmt* s) = 0;
@@ -21,10 +21,7 @@ class EVALVisitor : public Visitor {
 public:
     void visit(SelectStmt* s) override;
     void visit(InsertStmt* s) override;
-    void visit(CreateIndexStmt* s) override {
-        std::cout << "no";
-
-    }
+    void visit(CreateIndexStmt* s) override;
     void visit(DeleteStmt* s) override {
         std::cout << "no";
 
@@ -44,5 +41,5 @@ int getTypeSize(const string& tipo);
 void serializeField(char* buf, const string& val, const string& tipo);
 string deserializeField(const char* buf, const string& tipo);
 vector<pair<string,string>> leerSchema(const string& path);
-
+string getIndex(const string& tabla, const string& columna);
 #endif // VISITOR_H
