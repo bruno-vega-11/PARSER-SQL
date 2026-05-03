@@ -3,7 +3,7 @@ import subprocess
 import shutil
 
 # Archivos c++
-programa = ["main.cpp", "scanner.cpp", "token.cpp", "parser.cpp", "ast.cpp", "visitor.cpp","SequentialFile.cpp"]
+programa = ["main.cpp", "scanner.cpp", "token.cpp", "parser.cpp", "ast.cpp", "visitor.cpp","SequentialFile.cpp","BPTree.cpp"]
 
 # Compilar
 compile = ["g++"] + programa

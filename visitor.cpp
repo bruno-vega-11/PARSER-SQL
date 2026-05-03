@@ -71,7 +71,7 @@ void EVALVisitor::visit(SelectStmt* s) {
     } else {
         if (BinaryExp* b = dynamic_cast<BinaryExp*>(s->where_cond)) {
             IdExp* campo = dynamic_cast<IdExp*>(b->left);
-            NumberExp* valor = dynamic_cast<NumberExp*>(b->right);
+            IntExp* valor = dynamic_cast<IntExp*>(b->right);
 
             if (!campo || !valor) {
                 cerr << "WHERE mal hecho:'v\n"; return;
@@ -151,8 +151,8 @@ void EVALVisitor::visit(SelectStmt* s) {
 
         } else if (BetweenEXp* be = dynamic_cast<BetweenEXp*>(s->where_cond)) {
             IdExp* campo = dynamic_cast<IdExp*>(be->id);
-            int low  = dynamic_cast<NumberExp*>(be->low)->value;
-            int high = dynamic_cast<NumberExp*>(be->high)->value;
+            int low  = dynamic_cast<IntExp*>(be->low)->value;
+            int high = dynamic_cast<IntExp*>(be->high)->value;
 
             // imprimir header
             cout << "id\t";
@@ -320,7 +320,7 @@ void EVALVisitor::visit(InsertStmt* s) {
         string val = "";
         if (StringExp* se = dynamic_cast<StringExp*>(e))
             val = se->value;
-        else if (NumberExp* ne = dynamic_cast<NumberExp*>(e))
+        else if (IntExp* ne = dynamic_cast<IntExp*>(e))
             val = to_string(ne->value);
 
         serializeField(buffer + offset, val, cols[i].second);
