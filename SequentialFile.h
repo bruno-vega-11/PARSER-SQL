@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <cstring>
 #include <cstdio>
+#include <utility>
 
 constexpr size_t SEQ_PAGE_SIZE = 4096;
 
@@ -50,11 +51,12 @@ struct SeqPage {
     size_t record_count = 0;
     Record<KeyType> records[get_blocking_factor<KeyType>()];
     char padding[SEQ_PAGE_SIZE - sizeof(size_t) - sizeof(Record<KeyType>) * get_blocking_factor<KeyType>()];
-    
+
     SeqPage() : record_count(0) {
         memset(padding, 0, sizeof(padding));
     }
 };
+
 // 4. Gestor de Disco
 class DiskManager {
 private:
@@ -87,17 +89,18 @@ private:
     DiskManager data_file;
     DiskManager aux_file;
 
-
     size_t aux_record_count;
     size_t K_LIMIT;
     long total_data_pages;
     long total_aux_pages;
     RecordPointer head_ptr;
 
+    // Archivos dinámicos y metadatos implementados por tu compañero
     std::string data_filename;
     std::string aux_filename;
     std::string meta_filename;
-    // nuevo para generar llaves automaticamente
+
+    // Generador automático de llaves
     KeyType auto_increment_counter;
 
     void fetch_page(const RecordPointer& ptr, SeqPage<KeyType>& page);
@@ -106,22 +109,30 @@ private:
 
 public:
     SequentialFile(const std::string& data_name, const std::string& aux_name, size_t k = 50);
-    void save_meta();
-    std::pair<Record<KeyType>, int> search(KeyType search_key);
+
+    void save_meta(); // Guarda el estado actual rápido en disco
+
     void remove(KeyType key);
     std::vector<Record<KeyType>> rangeSearch(KeyType begin_key, KeyType end_key);
     void rebuild();
     std::vector<Record<KeyType>> scanAll();
     std::vector<Record<KeyType>> searchByText(const std::string& query);
-    // recibe el registro completo y bloquea duplicados
-    void add(const Record<KeyType>& new_record);
 
-    // solo recibe los datos (payload) y genera el ID
-    void add(const std::string& payload);
+    std::pair<bool, std::pair<long, int>> add(const Record<KeyType>& new_record);
 
-    // recibe los datos pero como char
-    void add(const char* buffer, size_t size);
-    
+
+    std::pair<bool, std::pair<long, int>> add(const std::string& payload);
+
+    // Recibe los datos pero como char
+    std::pair<bool, std::pair<long, int>> add(const char* buffer, size_t size);
+
+
+    // Búsqueda veloz para índices secundarios dictados por el parser
+    std::vector<Record<KeyType>> search(const std::vector<std::pair<std::string, std::pair<long, int>>>& targets);
+
+
+    std::pair<Record<KeyType>, int> search_key(KeyType search_key);
+
     // Para obtener todo con ptr
     std::vector<std::pair<Record<KeyType>, RecordPointer>> scanAllWithPtr();
 };
