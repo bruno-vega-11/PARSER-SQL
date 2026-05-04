@@ -31,6 +31,11 @@ public:
     void addKey(TKey key) {
         if (!isFull()) {
             keys[count++] = key;
+            return;
+        }
+        if (useChaining) {
+            if (next == nullptr) next = new Bucket<TKey>(localDepth);
+            next->addKey(key);
         }
     }
 
@@ -119,6 +124,7 @@ private:
                 for (int j = i; j < cubeta->count - 1; j++) {
                     cubeta->keys[j] = cubeta->keys[j + 1];
                 }
+                cubeta->count --;
                 return true;
             }
         }
@@ -128,7 +134,12 @@ private:
         return false;
     }
 
-    void merge_buckets() {
+    void try_merge(Bucket<TKey>* bucket,int index) {
+        if (bucket->localDepth == 0 || bucket->useChaining) return;
+
+        int buddyIndex = index ^(   1 << (bucket->localDepth - 1));
+        Bucket<TKey>* buddy = directory[buddyIndex];
+
 
     }
 public:
@@ -148,11 +159,11 @@ public:
         int index = getIndex(key);
         Bucket<TKey>* target = directory[index];
 
-        if (!target->isFull()) {
-            target->addKey(key);
-        } else {
+        if (target->isFull() && !target->useChaining) {
             split(index);
-            add(key);
+            add_hash(key);
+        } else {
+            target->addKey(key);
         }
     }
 
@@ -181,7 +192,7 @@ public:
         if (!borrado) {
             throw runtime_error("XDDD que webon");
         }
-        merge_buckets();
+        try_merge(bucket,index);
     }
 };
 
