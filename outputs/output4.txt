@@ -1,7 +1,10 @@
 === STDOUT ===
 Parseo exitoso
-id	nombre	apellido	edad	
+DEBUG schema cols:
+  nombre='dni' tipo='INT'
+  nombre='nombre' tipo='CHAR(10)'
+id	dni	nombre	
 ----------------------------------------
-5	Nom5	Ape5	25	
+No habia
 
 === STDERR ===

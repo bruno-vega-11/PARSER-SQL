@@ -1,10 +1,13 @@
 Scanner
 
-TOKEN(NUM, "2")
-TOKEN(MUL, "*")
-TOKEN(NUM, "3")
-TOKEN(PLUS, "+")
-TOKEN(NUM, "4")
+TOKEN(SELECT, "SELECT")
+TOKEN(*,"*")
+TOKEN(FROM, "FROM")
+TOKEN(ID, "hola")
+TOKEN(WHERE, "WHERE")
+TOKEN(ID, "id")
+TOKEN(EQUAL, "=")
+TOKEN(INT_LIT, "5")
 TOKEN(END)
 
 Scanner exitoso

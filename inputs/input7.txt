@@ -1,1 +1,1 @@
-(1+3)*(4+5)
+SELECT * FROM hola WHERE edad = 25

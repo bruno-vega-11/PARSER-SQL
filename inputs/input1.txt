@@ -1,1 +1,1 @@
-SELECT * FROM hola
+CREATE TABLE hola FROM ("hola.csv") (id int primary key incremental,dni int,nombre char(10),edad int)

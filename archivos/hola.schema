@@ -1,1 +1,0 @@
-id:INT PK INCREMENTAL,dni:INT,nombre:CHAR(10)

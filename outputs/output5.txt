@@ -1,5 +1,5 @@
 === STDOUT ===
 Parseo exitoso
-Indice BTREE creado sobre 'edad' en tabla 'hola'
 
 === STDERR ===
+Columna 'edad' no existe

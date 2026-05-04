@@ -55,7 +55,7 @@ void EVALVisitor::visit(SelectStmt* s) {
         offset += getTypeSize(col.second);
     }
     SequentialFile<int> sf("archivos/"+s->table+".dat","archivos/"+s->table+"_aux.dat", 50);
-
+    //sin condicion
     if (s->where_cond == nullptr) {
         auto records = sf.scanAll();
 
@@ -81,7 +81,7 @@ void EVALVisitor::visit(SelectStmt* s) {
             if (!campo || !valor) {
                 cerr << "WHERE mal hecho:'v\n"; return;
             }
-
+            
             if (campo->value == "id") {
                 cout << "id\t";
                 for (auto& col : cols) cout << col.first << "\t";
@@ -297,14 +297,6 @@ void EVALVisitor::visit(CreateTableStmt* s) {
         }
 
         sf.add(buffer, total);
-        // justo antes de sf.add(buffer, total)
-        cout << "DEBUG vals: ";
-        for (auto& val : vals) cout << "'" << val << "' ";
-        cout << "\n";
-        int dni_val; memcpy(&dni_val, buffer, 4);
-        cout << "DEBUG dni en buffer=" << dni_val << "\n";
-        char nombre_val[11]={0}; memcpy(nombre_val, buffer+4, 10);
-        cout << "DEBUG nombre en buffer='" << nombre_val << "'\n";
         count++;
     }
 
