@@ -48,11 +48,10 @@ public:
 };
 
 
-
 template<typename TKey>
 class ExtendibleHashing {
 private:
-    int D = 1; // global depth [1-16] no mas
+    int D = 1; // global depth [1-16]
     list<Bucket<TKey>*> directory;
 
     int getIndex(TKey key) {
@@ -113,6 +112,25 @@ private:
         }
 
     }
+
+    bool delete_aux(TKey key,Bucket<TKey>* cubeta) {
+        for (int i = 0; i < cubeta->count; i++) {
+            if (cubeta->keys[i] == key) {
+                for (int j = i; j < cubeta->count - 1; j++) {
+                    cubeta->keys[j] = cubeta->keys[j + 1];
+                }
+                return true;
+            }
+        }
+        if (cubeta->next != nullptr) {
+            return delete_aux(key,cubeta->next);
+        }
+        return false;
+    }
+
+    void merge_buckets() {
+
+    }
 public:
 
     explicit ExtendibleHashing(){
@@ -126,7 +144,7 @@ public:
         }
     }
 
-    void add(TKey key) {
+    void add_hash(TKey key) {
         int index = getIndex(key);
         Bucket<TKey>* target = directory[index];
 
@@ -138,7 +156,7 @@ public:
         }
     }
 
-    list<int> search(TKey key) {
+    list<int> search_hash(TKey key) {
         list<int> result;
         int index = getIndex(key);
 
@@ -153,6 +171,17 @@ public:
             current = current->next;
         }
         return result;
+    }
+
+    void delete_hash(TKey key){
+        int index = getIndex(key);
+        Bucket<TKey>* bucket = directory[index];
+        bool borrado = delete_aux(key,bucket);
+
+        if (!borrado) {
+            throw runtime_error("XDDD que webon");
+        }
+        merge_buckets();
     }
 };
 
