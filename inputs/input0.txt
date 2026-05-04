@@ -1,1 +1,2 @@
-CREATE TABLE hola FROM ("data.csv") (id int primary key incremental,dni int,nombre char(10),edad int, genero char(10), altura float)
+CREATE TABLE hola FROM ("data.csv") (id int primary key incremental,dni int,nombre char(10),edad int, genero char(10), altura float);
+CREATE INDEX BTREE edad ON hola;

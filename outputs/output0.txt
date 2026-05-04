@@ -1,8 +1,9 @@
 === STDOUT ===
 Parseo exitoso
 META no existe - archivo nuevo
-Tabla 'hola' creada con 10000 registros
+Tabla 'hola' creada con 48 registros
+[CREATE INDEX BTREE] sobre 'edad' tipo=INT en tabla 'hola'
 
-Tiempo de ejecuciÃ³n: 26866 ms
+Tiempo de ejecuciÃ³n: 109 ms
 
 === STDERR ===

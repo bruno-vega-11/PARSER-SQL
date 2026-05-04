@@ -23,11 +23,9 @@ public:
     void visit(SelectStmt* s) override;
     void visit(InsertStmt* s) override;
     void visit(CreateIndexStmt* s) override;
-    void visit(DeleteStmt* s) override {
-        std::cout << "no";
-
-    }
+    void visit(DeleteStmt* s) override;
     void visit(CreateTableStmt* s) override;
+    void reconstruirIndices(const string& tabla,const vector<pair<string,string>>& cols,SequentialFile<int>& sf);
     void interprete(Exp* program);
 };
 
