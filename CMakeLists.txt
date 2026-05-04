@@ -8,4 +8,9 @@ add_executable(Proyecto main.cpp
                 parser.cpp
                 scanner.cpp
                 token.cpp
-                visitor.cpp)
+                visitor.cpp
+                BPTree.cpp
+                pruebaBPTree.cpp
+                SequentialFile.cpp
+        ExtendibleHashing.cpp
+        ExtendibleHashing.h)
