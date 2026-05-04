@@ -6,13 +6,14 @@
 #define EXTENDIBLEHASHING_H
 #include <list>
 #include <functional> // quitar
+#include <stdexcept>
 
 using namespace std;
 
 static constexpr int PAGE_SIZE = 4096;
 
-static constexpr int BUCKET_SIZE  = 3;
-
+static constexpr int BUCKET_SIZE  = 3; // arreglar estitoxd
+static constexpr int DLIMIT       = 16;
 
 template<typename TKey>
 class Bucket {
@@ -21,6 +22,7 @@ public:
     int count = 0;
     int  localDepth = 0;
     Bucket* next = nullptr;
+    bool useChaining = false;
 
     explicit Bucket(int depth): localDepth(depth){}
 
@@ -50,19 +52,39 @@ public:
 template<typename TKey>
 class ExtendibleHashing {
 private:
-    int D = 1; // global depth
+    int D = 1; // global depth [1-16] no mas
     list<Bucket<TKey>*> directory;
 
     int getIndex(TKey key) {
-        size_t h = hash<TKey>{}(key);
-        return h & ((1 << D) - 1);
+        size_t h = hash<TKey>{}(key);  // cambiar por un hash implementado por mi
+        return h & ((1 << D) - 1); // se queda con los ultimos bits, para mapearlo en mi directorio
+    }
+
+    size_t getHash(TKey key) {
+        return hash<TKey>{}(key);
+    }
+
+    void expandDirectory() {
+        int oldsize = 1 << D;
+        D++;
+        int newsize = 1 << D;
+
+        directory.resize(newsize);
+
+        for (int i=0; i < oldsize; i++) {
+            directory[i + oldsize] = directory[i];
+        }
     }
 
     void split(int index) {
         Bucket<TKey>* oldBucket = directory[index];
 
         if (oldBucket->localDepth == D) {
-            //has cositas
+            if (D>= DLIMIT) {
+                oldBucket->useChaining = true;
+                return;
+            }
+            expandDirectory();
         }
         int newLocalDepth = oldBucket->localDepth+1;
         oldBucket->localDepth = newLocalDepth;
@@ -81,23 +103,17 @@ private:
                 directory[i] = newBucket;
             }
         }
-        for (const auto&k : tempKeys) {
-            add(k);
+        for (TKey k:tempKeys) {
+            size_t h = getHash(k);
+            if (h & splitBit) {
+                newBucket->addKey(k);
+            } else {
+                oldBucket->addKey(k);
+            }
         }
-
 
     }
 public:
-    // digamos que tienes implementaod la funcion hash y que retorna un binario
-    size_t do_hash(TKey key) {
-        hash<TKey> hasher; // quitar
-
-        size_t valorHash = hasher(key);
-
-        return valorHash & ((1 << D) - 1);
-
-    }
-    // quita esto pls ⬆️
 
     explicit ExtendibleHashing(){
         int size = 1 << D;
@@ -120,6 +136,23 @@ public:
             split(index);
             add(key);
         }
+    }
+
+    list<int> search(TKey key) {
+        list<int> result;
+        int index = getIndex(key);
+
+        Bucket<TKey>* current = directory[index];
+
+        while (current != nullptr) {
+            for (int i = 0 ; i < current->count ; i++) {
+                if (key == current->keys[i]) {
+                    result.push_back(i);
+                }
+            }
+            current = current->next;
+        }
+        return result;
     }
 };
 
