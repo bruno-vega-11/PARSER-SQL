@@ -1,10 +1,10 @@
 === STDOUT ===
 Parseo exitoso
-DEBUG schema cols:
-  nombre='dni' tipo='INT'
-  nombre='nombre' tipo='CHAR(10)'
-id	dni	nombre	
+id	dni	nombre	edad	genero	altura	
 ----------------------------------------
-No habia
+SequentialFile  binary search
+5	10000004	Luisa	23	F	1.780000	
+
+Tiempo de ejecuciÃ³n: 1 ms
 
 === STDERR ===

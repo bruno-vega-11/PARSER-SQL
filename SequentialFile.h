@@ -135,6 +135,8 @@ public:
 
     // Para obtener todo con ptr
     std::vector<std::pair<Record<KeyType>, RecordPointer>> scanAllWithPtr();
+
+    Record<KeyType> readByPointer(const RecordPointer& ptr);
 };
 
 #endif // SEQUENTIAL_FILE_H

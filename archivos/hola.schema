@@ -1,0 +1,1 @@
+id:INT PK INCREMENTAL,dni:INT,nombre:CHAR(10),edad:INT,genero:CHAR(10),altura:FLOAT

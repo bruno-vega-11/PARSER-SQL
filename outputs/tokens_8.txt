@@ -1,12 +1,11 @@
 Scanner
 
-TOKEN(NUM, "3")
-TOKEN(POW, "**")
-TOKEN(NUM, "2")
-TOKEN(PLUS, "+")
-TOKEN(NUM, "4")
-TOKEN(POW, "**")
-TOKEN(NUM, "2")
+TOKEN(CREATE, "CREATE")
+TOKEN(INDEX, "INDEX")
+TOKEN(BTREE, "BTREE")
+TOKEN(ID, "altura")
+TOKEN(ON, "ON")
+TOKEN(ID, "hola")
 TOKEN(END)
 
 Scanner exitoso

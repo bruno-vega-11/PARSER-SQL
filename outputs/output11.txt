@@ -1,0 +1,4 @@
+=== STDOUT ===
+
+=== STDERR ===
+Error al parsear: Se esperaba un numero

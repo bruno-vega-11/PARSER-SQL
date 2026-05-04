@@ -1,7 +1,7 @@
 === STDOUT ===
 Parseo exitoso
-Codigo:
-3 ** 2 + 4 ** 2
-Interprete:25
+[CREATE INDEX BTREE] sobre 'altura' tipo=FLOAT en tabla 'hola'
+
+Tiempo de ejecuciÃ³n: 361 ms
 
 === STDERR ===

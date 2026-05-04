@@ -1,1 +1,1 @@
-2 ** 5 + sqrt(5 + 3) + 10
+SELECT * FROM hola WHERE edad BETWEEN 25 AND 30

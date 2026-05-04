@@ -1,16 +1,11 @@
 Scanner
 
-TOKEN(LPAREN, "(")
-TOKEN(NUM, "1")
-TOKEN(PLUS, "+")
-TOKEN(NUM, "3")
-TOKEN(RPAREN, ")")
-TOKEN(MUL, "*")
-TOKEN(LPAREN, "(")
-TOKEN(NUM, "4")
-TOKEN(PLUS, "+")
-TOKEN(NUM, "5")
-TOKEN(RPAREN, ")")
+TOKEN(CREATE, "CREATE")
+TOKEN(INDEX, "INDEX")
+TOKEN(BTREE, "BTREE")
+TOKEN(ID, "genero")
+TOKEN(ON, "ON")
+TOKEN(ID, "hola")
 TOKEN(END)
 
 Scanner exitoso

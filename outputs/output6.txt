@@ -1,17 +1,7 @@
 === STDOUT ===
 Parseo exitoso
-DEBUG vals: '12345678' 'Juan' 
-DEBUG dni en buffer=12345678
-DEBUG nombre en buffer='Juan'
-DEBUG vals: '87654321' 'Ana' 
-DEBUG dni en buffer=87654321
-DEBUG nombre en buffer='Ana'
-DEBUG vals: '45678912' 'Carlos' 
-DEBUG dni en buffer=45678912
-DEBUG nombre en buffer='Carlos'
-DEBUG vals: '78912345' 'Lucia' 
-DEBUG dni en buffer=78912345
-DEBUG nombre en buffer='Lucia'
-Tabla 'hola' creada con 4 registros
+[CREATE INDEX BTREE] sobre 'edad' tipo=INT en tabla 'hola'
+
+Tiempo de ejecuciÃ³n: 320 ms
 
 === STDERR ===

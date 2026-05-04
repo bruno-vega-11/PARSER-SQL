@@ -94,7 +94,7 @@ public:
 class StringExp : public Exp {
 public:
     string value;
-    //int accept(Visitor* visitor); // modificar urgente
+    //int accept(Visitor* visitor);
     StringExp(string s);
     ~StringExp();
     void toDot(std::ostream& out, int& id) const override;

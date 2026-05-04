@@ -1,7 +1,7 @@
 === STDOUT ===
 Parseo exitoso
-Codigo:
-1 + 3 * 4 + 5
-Interprete:36
+[CREATE INDEX BTREE] sobre 'genero' tipo=CHAR(10) en tabla 'hola'
+
+Tiempo de ejecuciÃ³n: 470 ms
 
 === STDERR ===

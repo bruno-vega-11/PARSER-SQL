@@ -1,1 +1,1 @@
-CREATE INDEX BTREE edad ON hola
+SELECT * FROM hola

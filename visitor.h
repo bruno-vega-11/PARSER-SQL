@@ -44,4 +44,6 @@ string deserializeField(const char* buf, const string& tipo);
 vector<pair<string,string>> leerSchema(const string& path);
 string getIndex(const string& tabla, const string& columna);
 string getTipo(const string& raw);
+pair<string,string> getIndexInfo(const string& tabla, const string& columna);
+string getExpValue(Exp* e);
 #endif // VISITOR_H

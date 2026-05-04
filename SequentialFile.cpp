@@ -85,10 +85,14 @@ SequentialFile<KeyType>::SequentialFile(const std::string& data_name, const std:
         meta.read(reinterpret_cast<char*>(&head_ptr), sizeof(RecordPointer));
         meta.read(reinterpret_cast<char*>(&auto_increment_counter), sizeof(KeyType));
         meta.close();
+        // // DEBUG
+        // std::cout << "META cargado: head_ptr=(" << head_ptr.in_aux << "," 
+        //         << head_ptr.page_id << "," << head_ptr.record_idx 
+        //         << ") auto_inc=" << auto_increment_counter << "\n";
     } else {
-        // primera vez - archivo nuevo
         head_ptr = RecordPointer();
         auto_increment_counter = 0;
+        std::cout << "META no existe - archivo nuevo\n";
     }
 }
 
@@ -393,28 +397,31 @@ void SequentialFile<KeyType>::rebuild() {
             }
 
             int curr_idx = new_page.record_count;
-
             Record<KeyType> new_rec = rec;
-            new_rec.next_ptr = RecordPointer();
+            new_rec.next_ptr = RecordPointer(); // null por ahora
 
-            new_page.records[curr_idx] = new_rec;
-
+            // actualizar next_ptr del anterior EN MEMORIA si es misma pagina
             if (last_page_id != -1) {
-                SeqPage<KeyType> prev_page;
-                new_data.read_page(last_page_id, prev_page);
-                prev_page.records[last_idx].next_ptr = RecordPointer(false, new_page_id, curr_idx);
-                new_data.write_page(last_page_id, prev_page);
+                if (last_page_id == new_page_id) {
+                    // mismo pagina - actualizar en memoria directamente
+                    new_page.records[last_idx].next_ptr = RecordPointer(false, new_page_id, curr_idx);
+                } else {
+                    // pagina diferente - leer, actualizar y escribir
+                    SeqPage<KeyType> prev_page;
+                    new_data.read_page(last_page_id, prev_page);
+                    prev_page.records[last_idx].next_ptr = RecordPointer(false, new_page_id, curr_idx);
+                    new_data.write_page(last_page_id, prev_page);
+                }
             }
 
+            new_page.records[curr_idx] = new_rec;
             last_page_id = new_page_id;
             last_idx = curr_idx;
-
             new_page.record_count++;
         }
 
         current_read_ptr = rec.next_ptr;
     }
-
     if (new_page.record_count > 0) {
         new_data.write_page(new_page_id, new_page);
         total_data_pages = new_page_id + 1;
@@ -472,13 +479,18 @@ std::vector<Record<KeyType>> SequentialFile<KeyType>::scanAll() {
     RecordPointer current_ptr = head_ptr;
     SeqPage<KeyType> current_page;
 
+    // En scanAll, dentro del while:
     while (!current_ptr.is_null()) {
         fetch_page(current_ptr, current_page);
         Record<KeyType>& rec = current_page.records[current_ptr.record_idx];
 
-        if (!rec.is_deleted) {
-            results.push_back(rec);
-        }
+        // // DEBUG
+        // std::cout << "DEBUG scanAll: key=" << rec.key 
+        //         << " next=(" << rec.next_ptr.in_aux << "," 
+        //         << rec.next_ptr.page_id << "," 
+        //         << rec.next_ptr.record_idx << ")\n";
+
+        if (!rec.is_deleted) results.push_back(rec);
         current_ptr = rec.next_ptr;
     }
 
@@ -515,6 +527,12 @@ void SequentialFile<KeyType>::remove(KeyType key) {
     throw std::runtime_error("Registro no existe para eliminar");
 }
 
+template <typename KeyType>
+Record<KeyType> SequentialFile<KeyType>::readByPointer(const RecordPointer& ptr) {
+    SeqPage<KeyType> page;
+    fetch_page(ptr, page);
+    return page.records[ptr.record_idx];
+}
 template class SequentialFile<int>;
 template void DiskManager::read_page<int>(long, SeqPage<int>&);
 template void DiskManager::write_page<int>(long, const SeqPage<int>&);

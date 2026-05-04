@@ -2,7 +2,7 @@
 Parseo exitoso
 id	dni	nombre	edad	genero	altura	
 ----------------------------------------
-Sequential
+BTreegod
 45	10000044	Ernesto	28	M	1.600000	
 48	10000047	Nicolas	28	M	1.600000	
 49	10000048	Diana	30	F	1.600000	
@@ -376,6 +376,6 @@ Sequential
 9974	10009973	Carlos	34	M	1.600000	
 9984	10009983	Samuel	45	M	1.600000	
 
-Tiempo de ejecuciÃ³n: 81 ms
+Tiempo de ejecuciÃ³n: 9 ms
 
 === STDERR ===

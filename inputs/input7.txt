@@ -1,1 +1,1 @@
-SELECT * FROM hola WHERE edad = 25
+CREATE INDEX BTREE genero ON hola

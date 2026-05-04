@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <chrono>   // <-- agregar esto
 #include "scanner.h"
 #include "parser.h"
 #include "ast.h"
@@ -48,10 +49,21 @@ int main(int argc, const char* argv[]) {
     out.close();
 
     if (ast != nullptr) {
-        EVALVisitor eval;             
+        EVALVisitor eval;
+
+        // INICIO TIEMPO
+        auto start = chrono::high_resolution_clock::now();
+
         for (Stmt* s : ast->stmtList) {
             s->accept(&eval);
         }
+
+        // FIN TIEMPO
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+
+        cout << "\nTiempo de ejecución: " << duration.count() << " ms\n";
+
         delete ast;
     }
 
