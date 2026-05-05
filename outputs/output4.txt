@@ -2,8 +2,8 @@
 Parseo exitoso
 id	dni	nombre	edad	genero	altura	
 ----------------------------------------
-SequentialFile  binary search
-5	10000004	Luisa	23	F	1.780000	
+SequentialFile binary search por key
+5	10000004	Teresa	18	F	1.770000	
 
 Tiempo de ejecuciÃ³n: 1 ms
 

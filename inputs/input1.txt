@@ -1,2 +1,1 @@
 INSERT INTO hola VALUES (10000027, 'Tomas', 47, 'M', 1.65);
-INSERT INTO hola VALUES (10000027, 'Timlon', 47, 'M', 1.65);

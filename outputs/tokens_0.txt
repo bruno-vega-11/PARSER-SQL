@@ -36,13 +36,6 @@ TOKEN(ID, "altura")
 TOKEN(FLOAT, "float")
 TOKEN(RPAREN, ")")
 TOKEN(PCOMA, ";")
-TOKEN(CREATE, "CREATE")
-TOKEN(INDEX, "INDEX")
-TOKEN(BTREE, "BTREE")
-TOKEN(ID, "edad")
-TOKEN(ON, "ON")
-TOKEN(ID, "hola")
-TOKEN(PCOMA, ";")
 TOKEN(END)
 
 Scanner exitoso

@@ -1,7 +1,7 @@
 === STDOUT ===
 Parseo exitoso
-[CREATE INDEX BTREE] sobre 'edad' tipo=INT en tabla 'hola'
+Btree sobre 'edad' tipo=INT en tabla 'hola
 
-Tiempo de ejecuciÃ³n: 320 ms
+Tiempo de ejecuciÃ³n: 340 ms
 
 === STDERR ===

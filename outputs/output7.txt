@@ -1,7 +1,7 @@
 === STDOUT ===
 Parseo exitoso
-[CREATE INDEX BTREE] sobre 'genero' tipo=CHAR(10) en tabla 'hola'
+Btree sobre 'genero' tipo=CHAR(10) en tabla 'hola
 
-Tiempo de ejecuciÃ³n: 470 ms
+Tiempo de ejecuciÃ³n: 462 ms
 
 === STDERR ===
