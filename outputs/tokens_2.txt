@@ -4,10 +4,7 @@ TOKEN(SELECT, "SELECT")
 TOKEN(*,"*")
 TOKEN(FROM, "FROM")
 TOKEN(ID, "hola")
-TOKEN(WHERE, "WHERE")
-TOKEN(ID, "edad")
-TOKEN(EQUAL, "=")
-TOKEN(INT_LIT, "25")
+TOKEN(PCOMA, ";")
 TOKEN(END)
 
 Scanner exitoso
