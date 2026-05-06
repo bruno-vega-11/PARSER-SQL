@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
-#include "BPTree.h"
+#include "../BPTree.h"
 using namespace std;
-
+/*
 int main() {
     Disk disk("test.db");
     BPlusTree<FixedString<4>> tree(disk);
@@ -48,3 +48,4 @@ int main() {
 
     return 0;
 }
+*/
