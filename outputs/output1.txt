@@ -1,10 +1,7 @@
 === STDOUT ===
 Parseo exitoso
 Insertado en 'hola
-Insertado en 'hola
-Rebuild detectado
-[Indice reconstruido: edad]
 
-Tiempo de ejecuciÃ³n: 68 ms
+Tiempo de ejecuciÃ³n: 3 ms
 
 === STDERR ===

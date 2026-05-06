@@ -1,7 +1,7 @@
 === STDOUT ===
 Parseo exitoso
-[CREATE INDEX BTREE] sobre 'altura' tipo=FLOAT en tabla 'hola'
+Btree sobre 'altura' tipo=FLOAT en tabla 'hola
 
-Tiempo de ejecuciÃ³n: 361 ms
+Tiempo de ejecuciÃ³n: 353 ms
 
 === STDERR ===
