@@ -546,8 +546,7 @@ void EVALVisitor::visit(InsertStmt* s) {
         ++it;
     }
 
-    SequentialFile<int> sf("archivos/"+s->table_name+".dat",
-                           "archivos/"+s->table_name+"_aux.dat", 50);
+    SequentialFile<int> sf("archivos/"+s->table_name+".dat","archivos/"+s->table_name+"_aux.dat", 50);
 
     auto [hubo_rebuild, pos] = sf.add(buffer, total);
     auto [page_id, slot] = pos;

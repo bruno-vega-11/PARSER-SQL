@@ -1,1 +1,1 @@
-SELECT * FROM hola;
+SELECT * FROM lugares WHERE ubicacion IN (POINT(40.4, 3.7), K 3)

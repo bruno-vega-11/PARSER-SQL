@@ -1,1 +1,1 @@
-INSERT INTO hola VALUES (10000001, "Tomas", 47, "M", 1.65)
+CREATE INDEX RTREE ubicacion ON lugares

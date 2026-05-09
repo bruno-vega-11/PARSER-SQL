@@ -1,1 +1,1 @@
-SELECT * FROM hola where edad = 47;
+SELECT * FROM hola;

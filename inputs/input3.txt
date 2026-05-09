@@ -1,1 +1,1 @@
-INSERT INTO hola VALUES (10000001, "Tomas2", 47, "M", 1.65)
+SELECT * FROM lugares WHERE ubicacion IN (POINT(40.4, 3.7), RADIUS 10.0)
