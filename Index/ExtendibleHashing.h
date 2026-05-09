@@ -541,14 +541,22 @@ public:
         int    index  = getIndex(key);
         PageID currId = directory[index];
 
+        cerr << "[SEARCH] key hash=" << getHash(key)
+         << " index=" << index << "\n";
+
         while (currId != NULL_PAGE_H) {
             Page_h   p       = disk.read(currId);
             BucketT* current = asBucket(p);
 
-            for (int i = 0; i < current->count; i++)
+            cerr << "[SEARCH] bucket=" <<currId
+             << " count=" << current->count << "\n";
+
+            for (int i = 0; i < current->count; i++) {
+                cerr << "[SEARCH]   stored key hash=" << getHash(current->keys[i])
+                 << " match=" << (key == current->keys[i]) << "\n";
                 if (key == current->keys[i])
                     result.push_back(current->values[i]);
-
+            }
             currId = current->nextPage;
         }
         return result;
