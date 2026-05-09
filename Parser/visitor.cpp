@@ -67,7 +67,8 @@ void EVALVisitor::visit(SelectStmt* s) {
         cout << "\n";
     };
 
-    auto cumple = [&](const string& val_rec, const string& val_str,const string& col_tipo, BinaryOp op) -> bool {
+    auto cumple = [&](const string& val_rec, const string& val_str,
+                      const string& col_tipo, BinaryOp op) -> bool {
         if (col_tipo == "INT") {
             int a = stoi(val_rec), b2 = stoi(val_str);
             switch(op) {
@@ -101,7 +102,9 @@ void EVALVisitor::visit(SelectStmt* s) {
         return false;
     };
 
-    auto btreeSearch = [&](const string& col_name, const string& col_tipo,int col_offset, const string& val_str,BinaryOp op) -> vector<RID> {
+    auto btreeSearch = [&](const string& col_name, const string& col_tipo,
+                           int col_offset, const string& val_str,
+                           BinaryOp op) -> vector<RID> {
         string btree_path = "archivos/"+s->table+"_"+col_name+".btree";
         Disk disk(btree_path);
         vector<RID> rids;
@@ -132,7 +135,7 @@ void EVALVisitor::visit(SelectStmt* s) {
                 else if (op == LES_OP) hi = val;
                 vector<RID> raw = btree.rangeSearch(lo, hi);
                 for (auto& rid : raw) {
-                    Record<int> rec = sf.readByPointer(RecordPointer(false, rid.page_id, rid.slot));
+                    Record<int> rec = sf.readByPointer(fromRID(rid));
                     float val_rec; memcpy(&val_rec, rec.data + col_offset, sizeof(float));
                     if (cumple(to_string(val_rec), val_str, col_tipo, op))
                         rids.push_back(rid);
@@ -151,9 +154,8 @@ void EVALVisitor::visit(SelectStmt* s) {
                 if      (op == GEQ_OP || op == GER_OP) lo = val;
                 else if (op == LEQ_OP || op == LES_OP) hi = val;
                 vector<RID> raw = btree.rangeSearch(lo, hi);
-                // filtrar exacto para > y
                 for (auto& rid : raw) {
-                    Record<int> rec = sf.readByPointer(RecordPointer(false, rid.page_id, rid.slot));
+                    Record<int> rec = sf.readByPointer(fromRID(rid));
                     string val_rec = deserializeField(rec.data + col_offset, col_tipo);
                     if (cumple(val_rec, val_str, col_tipo, op))
                         rids.push_back(rid);
@@ -164,7 +166,8 @@ void EVALVisitor::visit(SelectStmt* s) {
         return rids;
     };
 
-    auto scanFiltrar = [&](const string& col_tipo, int col_offset,const string& val_str, BinaryOp op) {
+    auto scanFiltrar = [&](const string& col_tipo, int col_offset,
+                           const string& val_str, BinaryOp op) {
         auto records = sf.scanAll();
         for (auto& r : records) {
             string val_rec = deserializeField(r.data + col_offset, col_tipo);
@@ -173,11 +176,12 @@ void EVALVisitor::visit(SelectStmt* s) {
         }
     };
 
-    auto ehashSearch = [&](const string& col_name, const string& col_tipo,int col_offset,const string& val_str,BinaryOp op) -> vector<RID_h> {
+    auto ehashSearch = [&](const string& col_name, const string& col_tipo,
+                           int col_offset, const string& val_str,
+                           BinaryOp op) -> vector<RID_h> {
         string ehash_path = "archivos/"+s->table+"_"+col_name+".ehash";
         Diske disk(ehash_path);
         vector<RID_h> rids;
-
         if (col_tipo == "INT") {
             ExtendibleHashing<int> ehash(disk);
             rids = ehash.search_hash(stoi(val_str));
@@ -192,25 +196,26 @@ void EVALVisitor::visit(SelectStmt* s) {
     };
 
     if (s->where_cond == nullptr) {
-        cout << "SequentialFile scanAll" << "\n";
+        cout << "SequentialFile scanAll\n";
         auto records = sf.scanAll();
         printHeader();
         for (auto& r : records) printRecord(r);
-        cout << "Total: " << records.size() << " registros" << "\n";
+        cout << "Total: " << records.size() << " registros\n";
 
     } else if (BinaryExp* b = dynamic_cast<BinaryExp*>(s->where_cond)) {
         IdExp* campo = dynamic_cast<IdExp*>(b->left);
-        if (!campo) { cerr << "WHERE mal formado" << "\n"; return; }
+        if (!campo) { cerr << "WHERE mal formado\n"; return; }
 
         string val_str = getExpValue(b->right);
+        printHeader();
 
         if (campo->value == "id") {
-            cout << "SequentialFile binary search por key" << "\n";
+            cout << "SequentialFile binary search por key\n";
             if (b->op == EQUAL_OP) {
                 try {
                     auto [rec, ios] = sf.search_key(stoi(val_str));
                     printRecord(rec);
-                } catch (...) { cout << "No encontrado" << "\n"; }
+                } catch (...) { cout << "No encontrado\n"; }
             } else {
                 int lo = INT_MIN, hi = INT_MAX;
                 int val = stoi(val_str);
@@ -228,52 +233,43 @@ void EVALVisitor::visit(SelectStmt* s) {
                 if (col.first == campo->value) { col_tipo = col.second; break; }
                 col_offset += getTypeSize(col.second);
             }
-            if (col_tipo.empty()) { cerr << "Columna no existe" << "\n"; return; }
+            if (col_tipo.empty()) { cerr << "Columna no existe\n"; return; }
 
             auto [idx_type, idx_col_tipo] = getIndexInfo(s->table, campo->value);
 
             if (idx_type == "btree") {
-                cout << "BTree" << "\n";
-                printHeader();
+                cout << "BTree\n";
                 auto rids = btreeSearch(campo->value, col_tipo, col_offset, val_str, b->op);
                 for (auto& rid : rids) {
-                    RecordPointer ptr(false, rid.page_id, rid.slot);
-                    printRecord(sf.readByPointer(ptr));
+                    printRecord(sf.readByPointer(fromRID(rid))); // <- fromRID
                 }
             } else if (idx_type == "ehash") {
                 if (b->op != EQUAL_OP) {
-                    cout << "Extendible Hash no soportado para esta opracion, usando Squential File methods" << "\n";
-                    printHeader();
+                    cout << "EHash no soporta esta operacion, usando scanAll\n";
                     scanFiltrar(col_tipo, col_offset, val_str, b->op);
                 } else {
-                    cout << "ExtendibleHash" << "\n";
-                    printHeader();
+                    cout << "ExtendibleHash\n";
                     auto rids = ehashSearch(campo->value, col_tipo, col_offset, val_str, b->op);
-                    cerr << "RIDs encontrados: " << rids.size() << "\n"; // borrar
                     for (auto& rid : rids) {
-                        cerr << "  page_id=" << rid.page_id << " slot=" << rid.slot << "\n";
-                    }
-                    cerr.flush(); // borrar esto tambien
-                    for (auto& rid : rids) {
-                        RecordPointer ptr(false, rid.page_id, rid.slot);
-                        Record<int> rec = sf.readByPointer(ptr);
-                        cerr << "Record leido: key=" << rec.key << "\n"; cerr.flush();
-                        printRecord(rec);
+                        printRecord(sf.readByPointer(fromRID_h(rid))); // <- fromRID_h
                     }
                 }
+            } else {
+                cout << "scanAll + filtro\n";
+                scanFiltrar(col_tipo, col_offset, val_str, b->op);
             }
         }
 
     } else if (BetweenEXp* be = dynamic_cast<BetweenEXp*>(s->where_cond)) {
         IdExp* campo = dynamic_cast<IdExp*>(be->id);
-        if (!campo) { cerr << "BETWEEN mal formado" << "\n"; return; }
+        if (!campo) { cerr << "BETWEEN mal formado\n"; return; }
 
         string low_str  = getExpValue(be->low);
         string high_str = getExpValue(be->high);
         printHeader();
 
         if (campo->value == "id") {
-            cout << "SequentialFile rangeSearch por key" << "\n";
+            cout << "SequentialFile rangeSearch por key\n";
             auto records = sf.rangeSearch(stoi(low_str), stoi(high_str));
             for (auto& r : records) printRecord(r);
 
@@ -284,12 +280,12 @@ void EVALVisitor::visit(SelectStmt* s) {
                 if (col.first == campo->value) { col_tipo = col.second; break; }
                 col_offset += getTypeSize(col.second);
             }
-            if (col_tipo.empty()) { cerr << "Columna no existe" << "\n"; return; }
+            if (col_tipo.empty()) { cerr << "Columna no existe\n"; return; }
 
             auto [idx_type, idx_col_tipo] = getIndexInfo(s->table, campo->value);
 
             if (idx_type == "btree") {
-                cout << "BTree rangeSearch" << "\n";
+                cout << "BTree rangeSearch\n";
                 string btree_path = "archivos/"+s->table+"_"+campo->value+".btree";
                 Disk disk(btree_path);
                 vector<RID> rids;
@@ -306,11 +302,10 @@ void EVALVisitor::visit(SelectStmt* s) {
                 }
 
                 for (auto& rid : rids) {
-                    RecordPointer ptr(false, rid.page_id, rid.slot);
-                    printRecord(sf.readByPointer(ptr));
+                    printRecord(sf.readByPointer(fromRID(rid))); // <- fromRID
                 }
             } else {
-                cout << "SequentialFile scanAll + filtro BETWEEN" << "\n";
+                cout << "SequentialFile scanAll + filtro BETWEEN\n";
                 auto records = sf.scanAll();
                 for (auto& r : records) {
                     string val_rec = deserializeField(r.data + col_offset, col_tipo);
@@ -419,9 +414,8 @@ void EVALVisitor::visit(InsertStmt* s) {
 
     int total = 0;
     for (auto& col : cols) total += getTypeSize(col.second);
-    if (total > 64) { cerr << "Error: schema supera 64 bytes" << "\n"; return; }
+    if (total > 64) { cerr << "Error: schema supera 64 bytes\n"; return; }
 
-    // serializar
     char buffer[64] = {0};
     int off = 0;
     auto it = s->values.begin();
@@ -436,54 +430,56 @@ void EVALVisitor::visit(InsertStmt* s) {
         ++it;
     }
 
-    SequentialFile<int> sf("archivos/"+s->table_name+".dat","archivos/"+s->table_name+"_aux.dat", 50);
+    SequentialFile<int> sf("archivos/"+s->table_name+".dat",
+                           "archivos/"+s->table_name+"_aux.dat", 50);
 
     auto [hubo_rebuild, pos] = sf.add(buffer, total);
     auto [page_id, slot] = pos;
 
-    cerr << "Insertado en page_id=" << page_id << " slot=" << slot << "\n"; // borrar esto
-    cerr.flush(); // borrar esto
-
-    cout << "Insertado en '" << s->table_name << "\n";
+    cout << "Insertado en '" << s->table_name << "'\n";
 
     if (hubo_rebuild) {
-        cout << "Rebuild detectado" << "\n";
+        cout << "Rebuild detectado\n";
         reconstruirIndices(s->table_name, cols, sf);
     } else {
+        // nuevo registro siempre va al aux
+        RecordPointer new_ptr(true, page_id, slot);
+
         int off2 = 0;
         for (auto& col : cols) {
             auto [idx_type, idx_col_tipo] = getIndexInfo(s->table_name, col.first);
+
             if (idx_type == "btree") {
                 string btree_path = "archivos/"+s->table_name+"_"+col.first+".btree";
                 Disk disk(btree_path);
                 if (col.second == "INT") {
                     BPlusTree<int> btree(disk);
                     int val; memcpy(&val, buffer + off2, sizeof(int));
-                    btree.insert(val, RID{(int)page_id, slot});
+                    btree.insert(val, toRID(new_ptr)); // <- toRID
                 } else if (col.second == "FLOAT") {
                     BPlusTree<float> btree(disk);
                     float val; memcpy(&val, buffer + off2, sizeof(float));
-                    btree.insert(val, RID{(int)page_id, slot});
+                    btree.insert(val, toRID(new_ptr));
                 } else if (col.second.find("CHAR") != string::npos) {
                     BPlusTree<FixedString<64>> btree(disk);
                     FixedString<64> val(buffer + off2);
-                    btree.insert(val, RID{(int)page_id, slot});
+                    btree.insert(val, toRID(new_ptr));
                 }
-            } else if (idx_type == "ehash") { // + 1000 aura
+            } else if (idx_type == "ehash") {
                 string ehash_path = "archivos/"+s->table_name+"_"+col.first+".ehash";
                 Diske disk(ehash_path);
                 if (col.second == "INT") {
                     ExtendibleHashing<int> ehash(disk);
-                    int val; memcpy(&val,buffer+off2,sizeof(int));
-                    ehash.insert_hash(val,RID_h{(int)page_id,slot});
-                }else if (col.second == "FLOAT") {
+                    int val; memcpy(&val, buffer + off2, sizeof(int));
+                    ehash.insert_hash(val, toRID_h(new_ptr)); // <- toRID_h
+                } else if (col.second == "FLOAT") {
                     ExtendibleHashing<float> ehash(disk);
-                    float val; memcpy(&val,buffer+off2,sizeof(float));
-                    ehash.insert_hash(val,RID_h{(int)page_id,slot});
+                    float val; memcpy(&val, buffer + off2, sizeof(float));
+                    ehash.insert_hash(val, toRID_h(new_ptr));
                 } else if (col.second.find("CHAR") != string::npos) {
                     ExtendibleHashing<FixedString_H<64>> ehash(disk);
                     FixedString_H<64> val(buffer + off2);
-                    ehash.insert_hash(val,RID_h{(int)page_id,slot});
+                    ehash.insert_hash(val, toRID_h(new_ptr));
                 }
             }
             off2 += getTypeSize(col.second);
@@ -492,11 +488,6 @@ void EVALVisitor::visit(InsertStmt* s) {
 }
 
 void EVALVisitor::visit(CreateIndexStmt* s) {
-    if (s->op != BTREE && s->op != EHASH) {
-        cerr << "Solo BTREE e EHASH implementado por ahora" << "\n";
-        return;
-    }
-
     auto cols = leerSchema("archivos/"+s->tableName+".schema");
     int col_offset = 0;
     string col_tipo = "";
@@ -509,75 +500,93 @@ void EVALVisitor::visit(CreateIndexStmt* s) {
     }
 
     if (col_tipo.empty()) {
-        cerr << "Columna '" << s->indexName << "' no existe" << "\n";
+        cerr << "Columna '" << s->indexName << "' no existe\n";
         return;
     }
 
-    SequentialFile<int> sf("archivos/"+s->tableName+".dat","archivos/"+s->tableName+"_aux.dat", 50);
+    SequentialFile<int> sf("archivos/"+s->tableName+".dat",
+                           "archivos/"+s->tableName+"_aux.dat", 50);
     auto records = sf.scanAllWithPtr();
 
     if (s->op == BTREE) {
         string btree_path = "archivos/"+s->tableName+"_"+s->indexName+".btree";
+        remove(btree_path.c_str()); // borrar anterior si existe
         Disk disk(btree_path);
 
         if (col_tipo == "INT") {
             BPlusTree<int> btree(disk);
             for (auto& [rec, ptr] : records) {
                 int val; memcpy(&val, rec.data + col_offset, sizeof(int));
-                btree.insert(val, RID{(int)ptr.page_id, ptr.record_idx});
+                btree.insert(val, toRID(ptr)); // <- toRID
             }
-        }else if (col_tipo == "FLOAT") {
+        } else if (col_tipo == "FLOAT") {
             BPlusTree<float> btree(disk);
             for (auto& [rec, ptr] : records) {
                 float val; memcpy(&val, rec.data + col_offset, sizeof(float));
-                btree.insert(val, RID{(int)ptr.page_id, ptr.record_idx});
+                btree.insert(val, toRID(ptr));
             }
         } else if (col_tipo.find("CHAR") != string::npos) {
             BPlusTree<FixedString<64>> btree(disk);
             for (auto& [rec, ptr] : records) {
                 FixedString<64> val(rec.data + col_offset);
-                btree.insert(val, RID{(int)ptr.page_id, ptr.record_idx});
+                btree.insert(val, toRID(ptr));
             }
         } else {
-            cerr << "Tipo '" << col_tipo << "' no soportado para indice" << "\n";
+            cerr << "Tipo '" << col_tipo << "' no soportado para btree\n";
             return;
         }
-        ofstream idx("archivos/"+s->tableName+".indexes", ios::app);
-        idx << s->indexName << ":btree:" << col_tipo << "\n";
-        idx.close();
 
-        cout << "Btree sobre '" << s->indexName<< "' tipo=" << col_tipo<< " en tabla '" << s->tableName << "\n";
+        // registrar en .indexes solo si no existe ya
+        ifstream check("archivos/"+s->tableName+".indexes");
+        string line; bool existe = false;
+        while (getline(check, line))
+            if (line.find(s->indexName+":btree") != string::npos) { existe = true; break; }
+        check.close();
+        if (!existe) {
+            ofstream idx("archivos/"+s->tableName+".indexes", ios::app);
+            idx << s->indexName << ":btree:" << col_tipo << "\n";
+        }
+        cout << "Btree sobre '" << s->indexName << "' tipo=" << col_tipo
+             << " en tabla '" << s->tableName << "'\n";
+
     } else if (s->op == EHASH) {
         string ehash_path = "archivos/"+s->tableName+"_"+s->indexName+".ehash";
+        remove(ehash_path.c_str()); // borrar anterior si existe
         Diske diske(ehash_path);
 
         if (col_tipo == "INT") {
             ExtendibleHashing<int> ehash(diske);
             for (auto& [rec, ptr] : records) {
                 int val; memcpy(&val, rec.data + col_offset, sizeof(int));
-                ehash.insert_hash(val, RID_h{(int)ptr.page_id, ptr.record_idx});
+                ehash.insert_hash(val, toRID_h(ptr));
             }
         } else if (col_tipo == "FLOAT") {
             ExtendibleHashing<float> ehash(diske);
             for (auto& [rec, ptr] : records) {
                 float val; memcpy(&val, rec.data + col_offset, sizeof(float));
-                ehash.insert_hash(val, RID_h{(int)ptr.page_id, ptr.record_idx});
+                ehash.insert_hash(val, toRID_h(ptr));
             }
         } else if (col_tipo.find("CHAR") != string::npos) {
             ExtendibleHashing<FixedString_H<64>> ehash(diske);
             for (auto& [rec, ptr] : records) {
                 FixedString_H<64> val(rec.data + col_offset);
-                ehash.insert_hash(val, RID_h{(int)ptr.page_id, ptr.record_idx});
+                ehash.insert_hash(val, toRID_h(ptr));
             }
         } else {
             cerr << "Tipo '" << col_tipo << "' no soportado para ehash\n";
             return;
         }
 
-        ofstream idx("archivos/"+s->tableName+".indexes", ios::app);
-        idx << s->indexName << ":ehash:" << col_tipo << "\n";
-        cout << "EHash sobre '" << s->indexName
-             << "' tipo=" << col_tipo
+        ifstream check("archivos/"+s->tableName+".indexes");
+        string line; bool existe = false;
+        while (getline(check, line))
+            if (line.find(s->indexName+":ehash") != string::npos) { existe = true; break; }
+        check.close();
+        if (!existe) {
+            ofstream idx("archivos/"+s->tableName+".indexes", ios::app);
+            idx << s->indexName << ":ehash:" << col_tipo << "\n";
+        }
+        cout << "EHash sobre '" << s->indexName << "' tipo=" << col_tipo
              << " en tabla '" << s->tableName << "'\n";
     }
 }
@@ -587,7 +596,8 @@ void EVALVisitor::visit(DeleteStmt* s) {
 
     SequentialFile<int> sf("archivos/"+s->table+".dat","archivos/"+s->table+"_aux.dat", 50);
 
-    auto cumpleCondicion = [&](const string& val_rec, const string& val_str,const string& col_tipo, BinaryOp op) -> bool {
+    auto cumpleCondicion = [&](const string& val_rec, const string& val_str,
+                                const string& col_tipo, BinaryOp op) -> bool {
         if (col_tipo == "INT") {
             int a = stoi(val_rec), b2 = stoi(val_str);
             switch(op) {
@@ -623,12 +633,12 @@ void EVALVisitor::visit(DeleteStmt* s) {
 
     if (BinaryExp* b = dynamic_cast<BinaryExp*>(s->where_cond)) {
         IdExp* campo = dynamic_cast<IdExp*>(b->left);
-        if (!campo) { cerr << "DELETE WHERE mal formado" << "\n"; return; }
+        if (!campo) { cerr << "DELETE WHERE mal formado\n"; return; }
 
         string val_str = getExpValue(b->right);
 
         if (campo->value == "id" && b->op == EQUAL_OP) {
-            cout << "SequentialFile remove por key" << "\n";
+            cout << "SequentialFile remove por key\n";
             try {
                 sf.remove(stoi(val_str));
                 cout << "Eliminado id=" << val_str << "\n";
@@ -644,12 +654,12 @@ void EVALVisitor::visit(DeleteStmt* s) {
             if (col.first == campo->value) { col_tipo = col.second; break; }
             col_offset += getTypeSize(col.second);
         }
-        if (col_tipo.empty()) { cerr << "Columna no existe" << "\n"; return; }
+        if (col_tipo.empty()) { cerr << "Columna no existe\n"; return; }
 
         auto [idx_type, idx_col_tipo] = getIndexInfo(s->table, campo->value);
 
         if (idx_type == "btree") {
-            cout << "BTree + SequentialFile remove" << "\n";
+            cout << "BTree + SequentialFile remove\n";
             string btree_path = "archivos/"+s->table+"_"+campo->value+".btree";
             Disk disk(btree_path);
             vector<RID> rids;
@@ -657,9 +667,8 @@ void EVALVisitor::visit(DeleteStmt* s) {
             if (col_tipo == "INT") {
                 BPlusTree<int> btree(disk);
                 int val = stoi(val_str);
-                if (b->op == EQUAL_OP) {
-                    rids = btree.searchAll(val);
-                } else {
+                if (b->op == EQUAL_OP) rids = btree.searchAll(val);
+                else {
                     int lo = INT_MIN, hi = INT_MAX;
                     if      (b->op == GEQ_OP) lo = val;
                     else if (b->op == GER_OP) lo = val + 1;
@@ -668,10 +677,10 @@ void EVALVisitor::visit(DeleteStmt* s) {
                     rids = btree.rangeSearch(lo, hi);
                 }
                 for (auto& rid : rids) {
-                    Record<int> rec = sf.readByPointer(RecordPointer(false, rid.page_id, rid.slot));
+                    Record<int> rec = sf.readByPointer(fromRID(rid)); // <- fromRID
                     int val_rec; memcpy(&val_rec, rec.data + col_offset, sizeof(int));
+                    sf.remove(rec.key);
                     btree.removeByRID(val_rec, rid);
-                    sf.remove(rid.page_id,rid.slot);
                 }
 
             } else if (col_tipo == "FLOAT") {
@@ -682,41 +691,42 @@ void EVALVisitor::visit(DeleteStmt* s) {
                 else if (b->op == GER_OP) lo = val;
                 else if (b->op == LEQ_OP) hi = val;
                 else if (b->op == LES_OP) hi = val;
-                else if (b->op == EQUAL_OP) { lo = val; hi = val; }
+                else if (b->op == EQUAL_OP) rids = btree.searchAll(val);
 
-                rids = btree.rangeSearch(lo, hi);
+                if (b->op != EQUAL_OP) rids = btree.rangeSearch(lo, hi);
                 for (auto& rid : rids) {
-                    Record<int> rec = sf.readByPointer(RecordPointer(false, rid.page_id, rid.slot));
+                    Record<int> rec = sf.readByPointer(fromRID(rid)); // <- fromRID
                     float val_rec; memcpy(&val_rec, rec.data + col_offset, sizeof(float));
                     if (!cumpleCondicion(to_string(val_rec), val_str, col_tipo, b->op)) continue;
+                    sf.remove(rec.key);
                     btree.removeByRID(val_rec, rid);
-                    sf.remove(rid.page_id,rid.slot);
                 }
 
             } else if (col_tipo.find("CHAR") != string::npos) {
                 BPlusTree<FixedString<64>> btree(disk);
                 FixedString<64> val(val_str);
-                FixedString<64> lo, hi;
-                memset(lo.data, 0, 64);
-                memset(hi.data, 127, 64);
-                if      (b->op == GEQ_OP || b->op == GER_OP) lo = val;
-                else if (b->op == LEQ_OP || b->op == LES_OP) hi = val;
-                else if (b->op == EQUAL_OP) { lo = val; hi = val; }
-
-                rids = btree.rangeSearch(lo, hi);
+                if (b->op == EQUAL_OP) rids = btree.searchAll(val);
+                else {
+                    FixedString<64> lo, hi;
+                    memset(lo.data, 0, 64);
+                    memset(hi.data, 127, 64);
+                    if      (b->op == GEQ_OP || b->op == GER_OP) lo = val;
+                    else if (b->op == LEQ_OP || b->op == LES_OP) hi = val;
+                    rids = btree.rangeSearch(lo, hi);
+                }
                 for (auto& rid : rids) {
-                    Record<int> rec = sf.readByPointer(RecordPointer(false, rid.page_id, rid.slot));
+                    Record<int> rec = sf.readByPointer(fromRID(rid)); // <- fromRID
                     string val_rec = deserializeField(rec.data + col_offset, col_tipo);
                     if (!cumpleCondicion(val_rec, val_str, col_tipo, b->op)) continue;
                     FixedString<64> val_fs(val_rec);
+                    sf.remove(rec.key);
                     btree.removeByRID(val_fs, rid);
-                    sf.remove(rid.page_id,rid.slot);
                 }
             }
-            cout << "Eliminados " << rids.size() << " registros" << "\n";
+            cout << "Eliminados " << rids.size() << " registros\n";
 
         } else {
-            cout << "SequentialFile scanAll + filtro" << "\n";
+            cout << "SequentialFile scanAll + filtro\n";
             auto records = sf.scanAllWithPtr();
             int count = 0;
             for (auto& [rec, ptr] : records) {
@@ -726,21 +736,21 @@ void EVALVisitor::visit(DeleteStmt* s) {
                     count++;
                 }
             }
-            cout << "Eliminados " << count << " registros" << "\n";
+            cout << "Eliminados " << count << " registros\n";
         }
 
     } else if (BetweenEXp* be = dynamic_cast<BetweenEXp*>(s->where_cond)) {
         IdExp* campo = dynamic_cast<IdExp*>(be->id);
-        if (!campo) { cerr << "DELETE BETWEEN mal formado" << "\n"; return; }
+        if (!campo) { cerr << "DELETE BETWEEN mal formado\n"; return; }
 
         string low_str  = getExpValue(be->low);
         string high_str = getExpValue(be->high);
 
         if (campo->value == "id") {
-            cout << "SequentialFile rangeSearch + remove" << "\n";
+            cout << "SequentialFile rangeSearch + remove\n";
             auto records = sf.rangeSearch(stoi(low_str), stoi(high_str));
             for (auto& r : records) sf.remove(r.key);
-            cout << "Eliminados " << records.size() << " registros" << "\n";
+            cout << "Eliminados " << records.size() << " registros\n";
             return;
         }
 
@@ -750,12 +760,12 @@ void EVALVisitor::visit(DeleteStmt* s) {
             if (col.first == campo->value) { col_tipo = col.second; break; }
             col_offset += getTypeSize(col.second);
         }
-        if (col_tipo.empty()) { cerr << "Columna no existe" << "\n"; return; }
+        if (col_tipo.empty()) { cerr << "Columna no existe\n"; return; }
 
         auto [idx_type, idx_col_tipo] = getIndexInfo(s->table, campo->value);
 
         if (idx_type == "btree") {
-            cout << "BTree rangeSearch + remove" << "\n";
+            cout << "BTree rangeSearch + remove\n";
             string btree_path = "archivos/"+s->table+"_"+campo->value+".btree";
             Disk disk(btree_path);
             vector<RID> rids;
@@ -764,34 +774,35 @@ void EVALVisitor::visit(DeleteStmt* s) {
                 BPlusTree<int> btree(disk);
                 rids = btree.rangeSearch(stoi(low_str), stoi(high_str));
                 for (auto& rid : rids) {
-                    Record<int> rec = sf.readByPointer(RecordPointer(false, rid.page_id, rid.slot));
+                    Record<int> rec = sf.readByPointer(fromRID(rid)); // <- fromRID
                     int val; memcpy(&val, rec.data + col_offset, sizeof(int));
-                    sf.remove(rid.page_id,rid.slot);
+                    sf.remove(rec.key);
                     btree.removeByRID(val, rid);
                 }
             } else if (col_tipo == "FLOAT") {
                 BPlusTree<float> btree(disk);
                 rids = btree.rangeSearch(stof(low_str), stof(high_str));
                 for (auto& rid : rids) {
-                    Record<int> rec = sf.readByPointer(RecordPointer(false, rid.page_id, rid.slot));
+                    Record<int> rec = sf.readByPointer(fromRID(rid)); // <- fromRID
                     float val; memcpy(&val, rec.data + col_offset, sizeof(float));
-                    sf.remove(rid.page_id,rid.slot);
+                    sf.remove(rec.key);
                     btree.removeByRID(val, rid);
                 }
             } else if (col_tipo.find("CHAR") != string::npos) {
                 BPlusTree<FixedString<64>> btree(disk);
                 rids = btree.rangeSearch(FixedString<64>(low_str), FixedString<64>(high_str));
                 for (auto& rid : rids) {
-                    Record<int> rec = sf.readByPointer(RecordPointer(false, rid.page_id, rid.slot));
+                    Record<int> rec = sf.readByPointer(fromRID(rid)); // <- fromRID
                     string val_rec = deserializeField(rec.data + col_offset, col_tipo);
                     FixedString<64> val(val_rec);
-                    sf.remove(rid.page_id,rid.slot);
+                    sf.remove(rec.key);
                     btree.removeByRID(val, rid);
                 }
             }
-            cout << "Eliminados " << rids.size() << " registros" << "\n";
+            cout << "Eliminados " << rids.size() << " registros\n";
+
         } else {
-            cout << "SequentialFile scanAll + filtro BETWEEN" << "\n";
+            cout << "SequentialFile scanAll + filtro BETWEEN\n";
             auto records = sf.scanAllWithPtr();
             int count = 0;
             for (auto& [rec, ptr] : records) {
@@ -815,6 +826,7 @@ void EVALVisitor::visit(DeleteStmt* s) {
         }
     }
 }
+
 ///////////////////////////////////////////////////////////////////////////////////
 //Helpers
 
@@ -944,6 +956,28 @@ string getExpValue(Exp* e) {
     if (FloatExp* fe = dynamic_cast<FloatExp*>(e))   return to_string(fe->value);
     if (StringExp* se = dynamic_cast<StringExp*>(e)) return se->value;
     return "";
+}
+
+RID toRID(const RecordPointer& ptr) {
+    return RID{ptr.in_aux ? -(int)ptr.page_id - 1 : (int)ptr.page_id, ptr.record_idx};
+}
+
+RecordPointer fromRID(const RID& rid) {
+    if (rid.page_id < 0) {
+        return RecordPointer(true, -(long)(rid.page_id + 1), rid.slot);
+    }
+    return RecordPointer(false, rid.page_id, rid.slot);
+}
+
+RID_h toRID_h(const RecordPointer& ptr) {
+    return RID_h{ptr.in_aux ? -(int)ptr.page_id - 1 : (int)ptr.page_id, ptr.record_idx};
+}
+
+RecordPointer fromRID_h(const RID_h& rid) {
+    if (rid.page_id < 0) {
+        return RecordPointer(true, -(long)(rid.page_id + 1), rid.slot);
+    }
+    return RecordPointer(false, rid.page_id, rid.slot);
 }
 
 void EVALVisitor::reconstruirIndices(const string& tabla,const vector<pair<string,string>>& cols,SequentialFile<int>& sf) {

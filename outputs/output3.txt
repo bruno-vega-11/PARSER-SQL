@@ -1,7 +1,7 @@
 === STDOUT ===
 Parseo exitoso
-Insertado en 'hola'
+Btree sobre 'dni' tipo=INT en tabla 'hola
 
-Tiempo de ejecución: 1 ms
+Tiempo de ejecución: 8 ms
 
 === STDERR ===

@@ -1,1 +1,1 @@
-SELECT * FROM lugares;
+select * from hola;

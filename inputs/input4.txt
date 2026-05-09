@@ -1,1 +1,1 @@
-SELECT * FROM lugares WHERE ubicacion IN (POINT(40.4, 3.7), K 3)
+select * from hola where dni = 10000003;

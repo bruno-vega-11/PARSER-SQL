@@ -52,4 +52,8 @@ string getTipo(const string& raw);
 pair<string,string> getIndexInfo(const string& tabla, const string& columna);
 long long getRtreeId(const string& tabla, const string& columna);
 string getExpValue(Exp* e);
+RID toRID(const RecordPointer& ptr);
+RecordPointer fromRID(const RID& rid);
+RecordPointer fromRID_h(const RID_h& rid);
+RID_h toRID_h(const RecordPointer& ptr);
 #endif // VISITOR_H

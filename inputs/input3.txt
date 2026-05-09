@@ -1,1 +1,1 @@
-SELECT * FROM lugares WHERE ubicacion IN (POINT(40.4, 3.7), RADIUS 10.0)
+CREATE INDEX BTree dni on hola;

@@ -1,8 +1,8 @@
 === STDOUT ===
 Parseo exitoso
 META no existe - archivo nuevo
-Tabla 'lugares' creada con 6 registros
+Tabla 'hola' creada con 49 registros
 
-Tiempo de ejecución: 11 ms
+Tiempo de ejecución: 81 ms
 
 === STDERR ===
